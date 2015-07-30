@@ -260,13 +260,6 @@ namespace SexyProxy.Fody
             var current = type;
             while (current != null)
             {
-                if (current is GenericInstanceType)
-                {
-                    LogInfo($"{((GenericInstanceType)current).Resolve().GetElementType()}");
-                    LogInfo($"{taskTType}");
-                    LogInfo($"{Equals(((GenericInstanceType)current).Resolve().GetElementType(), taskTType)}");
-                    LogInfo($"{((GenericInstanceType)current).Resolve().GetElementType().CompareTo(taskTType)}");
-                }
                 if (current is GenericInstanceType && ((GenericInstanceType)current).Resolve().GetElementType().CompareTo(taskTType))
                     return ((GenericInstanceType)current).GenericArguments.Single();
                 current = current.Resolve().BaseType;                
