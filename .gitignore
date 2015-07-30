@@ -1,0 +1,11 @@
+.vs/
+packages/
+SexyProxy.Fody/obj/
+*.nupkg
+SexyProxy.Fody/bin/
+SexyProxy.Fody.Tests/obj/
+SexyProxy.Fody.Tests/bin/
+SexyProxy.Net45/bin/
+SexyProxy.Net45/obj/
+SexyProxy.Emit.Tests/bin/
+SexyProxy.Emit.Tests/obj/
