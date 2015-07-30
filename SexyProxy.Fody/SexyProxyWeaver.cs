@@ -26,16 +26,12 @@ namespace SexyProxy.Fody
 
         public void Execute()
         {
-            var foo = ModuleDefinition.Import(typeof(Task<string>));
-            LogInfo(foo.GetTaskType().ToString());
-
             var sexyProxy = ModuleDefinition.FindAssembly("SexyProxy");
             if (sexyProxy == null)
             {
                 LogError("Could not find assembly: SexyProxy (" + string.Join(", ", ModuleDefinition.AssemblyReferences.Select(x => x.Name)) + ")");
                 return;
             }
-            LogInfo($"{sexyProxy.Name} {sexyProxy.Version}");
 
             var proxyAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyAttribute", sexyProxy);
             if (proxyAttribute == null)
@@ -44,9 +40,6 @@ namespace SexyProxy.Fody
             var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true)).ToArray();
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
 
-            var typeType = ModuleDefinition.Import(typeof(Type));
-//            var getPropertyByName = ModuleDefinition.Import(typeType.Resolve().Methods.Single(x => x.Name == "GetProperty" && x.Parameters.Count == 1));
-//            var getTypeFromTypeHandle = ModuleDefinition.Import(typeType.Resolve().Methods.Single(x => x.Name == "GetTypeFromHandle"));
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
             var taskType = ModuleDefinition.Import(typeof(Task));
@@ -127,8 +120,6 @@ namespace SexyProxy.Fody
                 // Now implement/override all methods
                 foreach (var methodInfo in methods)
                 {
-                    LogInfo($"{sourceType}.{methodInfo}");
-
                     var parameterInfos = methodInfo.Parameters;
 
                     // Finalize doesn't work if we try to proxy it and really, who cares?
