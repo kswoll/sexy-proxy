@@ -56,16 +56,6 @@ namespace SexyProxy.Fody
             var asyncInvokeTMethod = invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT");
             var objectType = ModuleDefinition.Import(typeof(object));
 
-            var factoryProvider = ModuleDefinition.FindType("SexyProxy", "ProxyTypeFactoryProvider", sexyProxy);
-            var fodyProxyTypeFactoryType = ModuleDefinition.FindType("SexyProxy", "FodyProxyTypeFactory", sexyProxy);
-            var createProxyTypeFactoryMethod = factoryProvider.Resolve().Methods.Single(x => x.Name == "CreateProxyTypeFactory");
-            createProxyTypeFactoryMethod.Body = new MethodBody(createProxyTypeFactoryMethod);
-            createProxyTypeFactoryMethod.Body.Emit(il =>
-            {
-                il.Emit(OpCodes.Newobj, ModuleDefinition.Import(fodyProxyTypeFactoryType.Resolve().GetConstructors().First()));
-                il.Emit(OpCodes.Ret);
-            });
-
             foreach (var sourceType in targetTypes)
             {
                 bool isIntf = sourceType.IsInterface;

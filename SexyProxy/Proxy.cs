@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
+using SexyProxy.Emit;
 
 namespace SexyProxy
 {
@@ -117,8 +118,6 @@ namespace SexyProxy
 
     public static class Proxy<T>
     {
-        public static IProxyTypeFactory ProxyTypeFactory { get; } = ProxyTypeFactoryProvider.CreateProxyTypeFactory();
-
         private static Type proxyType = CreateProxyType();
 
         public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler)
@@ -128,7 +127,10 @@ namespace SexyProxy
 
         private static Type CreateProxyType()
         {
-            return ProxyTypeFactory.CreateProxyType(typeof(T));
+            if (Attribute.IsDefined(typeof(T), typeof(ProxyAttribute)))
+                return new FodyProxyTypeFactory().CreateProxyType(typeof(T));
+            else
+                return new EmitProxyTypeFactory().CreateProxyType(typeof(T));
         }
     }
 }
