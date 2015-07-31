@@ -216,7 +216,7 @@ namespace SexyProxy.Fody
                             var invocationType = asyncInvocationTType.MakeGenericInstanceType(taskTType);
                             var unconstructedConstructor = ModuleDefinition.Import(asyncInvocationTType.Resolve().GetConstructors().First());
                             invocationConstructor = ModuleDefinition.Import(unconstructedConstructor.Bind(invocationType));
-                            invokeMethod = ModuleDefinition.Import(asyncInvokeTMethod.MakeGenericMethod(taskTType).Resolve());
+                            invokeMethod = ModuleDefinition.Import(asyncInvokeTMethod.MakeGenericMethod(taskTType));
                         }
                         else
                         {
@@ -258,6 +258,8 @@ namespace SexyProxy.Fody
                                 il.Emit(OpCodes.Ldelem_Any, ModuleDefinition.TypeSystem.Object);     // Get element
                                 if (parameterInfos[i].ParameterType.IsValueType)
                                     il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType);
+                                else
+                                    il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
                             }
 
                             il.Emit(proceedCall, methodInfo);
@@ -317,7 +319,27 @@ namespace SexyProxy.Fody
                 });
                 ModuleDefinition.Types.Add(type);
 
-                sourceType.Fields.Add(new FieldDefinition("$proxy", FieldAttributes.Private | FieldAttributes.Static, type));
+                var proxy = new FieldDefinition("$proxy", FieldAttributes.Private | FieldAttributes.Static, type);
+                sourceType.Fields.Add(proxy);
+/*
+                var sourceTypeStaticConstructor = sourceType.GetStaticConstructor();
+                if (sourceTypeStaticConstructor == null)
+                {
+                    sourceTypeStaticConstructor = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, ModuleDefinition.TypeSystem.Void);
+                    sourceTypeStaticConstructor.Body = new MethodBody(sourceTypeStaticConstructor);
+                    sourceType.Methods.Add(sourceTypeStaticConstructor);
+                }
+                else
+                {
+                    sourceTypeStaticConstructor.Body.Instructions.RemoveAt(sourceTypeStaticConstructor.Body.Instructions.Count - 1);
+                }
+                sourceTypeStaticConstructor.Body.Emit(il =>
+                {
+                    il.LoadType(type);
+                    il.Emit(OpCodes.Stfld, proxy);
+                    il.Emit(OpCodes.Ret);
+                });
+*/
             }
         }
     }

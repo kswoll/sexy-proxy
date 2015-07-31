@@ -275,7 +275,7 @@ namespace SexyProxy.Fody
                 {
                     var returnTaskType = methodInfo.ReturnType.GetTaskType();
                     il.EmitDefaultValue(returnTaskType.Resolve());
-                    var fromResult = taskFromResult.MakeGenericMethod(taskType);
+                    var fromResult = taskFromResult.MakeGenericMethod(returnTaskType);
                     il.Emit(OpCodes.Call, fromResult);
                 }
                 else

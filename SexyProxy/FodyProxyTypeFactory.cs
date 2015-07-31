@@ -7,8 +7,7 @@ namespace SexyProxy
     {
         public Type CreateProxyType(Type sourceType)
         {
-            var field = sourceType.GetField("$proxy", BindingFlags.Static | BindingFlags.NonPublic);
-            return (Type)field.GetValue(null);
+            return sourceType.Assembly.GetType(sourceType.FullName + "$Proxy");
         }
     }
 }
