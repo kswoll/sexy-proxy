@@ -41,6 +41,7 @@ namespace SexyProxy.Fody
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
 
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));
+            var action1Type = ModuleDefinition.Import(typeof(Action<>));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
             var taskType = ModuleDefinition.Import(typeof(Task));
             var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
@@ -54,6 +55,16 @@ namespace SexyProxy.Fody
             var invokeTMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "InvokeT"));
             var asyncInvokeTMethod = invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT");
             var objectType = ModuleDefinition.Import(typeof(object));
+
+            var factoryProvider = ModuleDefinition.FindType("SexyProxy", "ProxyTypeFactoryProvider", sexyProxy);
+            var fodyProxyTypeFactoryType = ModuleDefinition.FindType("SexyProxy", "FodyProxyTypeFactory", sexyProxy);
+            var createProxyTypeFactoryMethod = factoryProvider.Resolve().Methods.Single(x => x.Name == "CreateProxyTypeFactory");
+            createProxyTypeFactoryMethod.Body = new MethodBody(createProxyTypeFactoryMethod);
+            createProxyTypeFactoryMethod.Body.Emit(il =>
+            {
+                il.Emit(OpCodes.Newobj, ModuleDefinition.Import(fodyProxyTypeFactoryType.Resolve().GetConstructors().First()));
+                il.Emit(OpCodes.Ret);
+            });
 
             foreach (var sourceType in targetTypes)
             {
@@ -115,7 +126,7 @@ namespace SexyProxy.Fody
 
                 var staticConstructor = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, ModuleDefinition.TypeSystem.Void);
                 staticConstructor.Body = new MethodBody(staticConstructor);
-                sourceType.Methods.Add(staticConstructor);
+                type.Methods.Add(staticConstructor);
 
                 // Now implement/override all methods
                 foreach (var methodInfo in methods)
@@ -172,7 +183,8 @@ namespace SexyProxy.Fody
                     // * The method's return type is Task               (Represented by Func<Task>)
                     // * The method's return type is Task<T>            (Represented by Func<Task<T>>)
                     // * The method's return type is anything else      (Represented by Func<T>)
-                    TypeDefinition proceedDelegateType;
+                    GenericInstanceType proceedDelegateType;
+                    MethodReference proceedDelegateTypeConstructor;
                     TypeReference proceedReturnType;
                     OpCode proceedCall = isIntf ? OpCodes.Callvirt : OpCodes.Call;
                     MethodReference invocationConstructor;
@@ -180,24 +192,30 @@ namespace SexyProxy.Fody
 
                     if (methodInfo.ReturnType.CompareTo(ModuleDefinition.TypeSystem.Void))
                     {
-                        proceedDelegateType = ModuleDefinition.Import(typeof(Action<object[]>)).Resolve();
+                        proceedDelegateType = action1Type.MakeGenericInstanceType(objectArrayType);
+                        proceedDelegateTypeConstructor = action1Type.Resolve().GetConstructors().First().Bind(proceedDelegateType);
                         proceedReturnType = ModuleDefinition.Import(typeof(void));
                         invocationConstructor = voidInvocationConstructor;
                         invokeMethod = voidInvokeMethod;
                     }
                     else
                     {
-                        proceedDelegateType = func2Type.MakeGenericInstanceType(objectArrayType, methodInfo.ReturnType).Resolve();
+                        proceedDelegateType = func2Type.MakeGenericInstanceType(objectArrayType, methodInfo.ReturnType);
+                        proceedDelegateTypeConstructor = func2Type.Resolve().GetConstructors().First().Bind(proceedDelegateType);
                         proceedReturnType = ModuleDefinition.Import(methodInfo.ReturnType);
                         if (!taskType.IsAssignableFrom(methodInfo.ReturnType))
                         {
-                            invocationConstructor = ModuleDefinition.Import(invocationTType.MakeGenericInstanceType(methodInfo.ReturnType.Resolve()).Resolve().GetConstructors().First());
+                            var invocationType = invocationTType.MakeGenericInstanceType(methodInfo.ReturnType.Resolve());
+                            var unconstructedConstructor = ModuleDefinition.Import(invocationTType.Resolve().GetConstructors().First());
+                            invocationConstructor = ModuleDefinition.Import(unconstructedConstructor.Bind(invocationType));
                             invokeMethod = ModuleDefinition.Import(invokeTMethod.MakeGenericMethod(methodInfo.ReturnType.Resolve()));
                         }
                         else if (methodInfo.ReturnType.IsTaskT())
                         {
                             var taskTType = methodInfo.ReturnType.GetTaskType();
-                            invocationConstructor = ModuleDefinition.Import(asyncInvocationTType.MakeGenericInstanceType(taskTType).Resolve().GetConstructors().First());
+                            var invocationType = asyncInvocationTType.MakeGenericInstanceType(taskTType);
+                            var unconstructedConstructor = ModuleDefinition.Import(asyncInvocationTType.Resolve().GetConstructors().First());
+                            invocationConstructor = ModuleDefinition.Import(unconstructedConstructor.Bind(invocationType));
                             invokeMethod = ModuleDefinition.Import(asyncInvokeTMethod.MakeGenericMethod(taskTType).Resolve());
                         }
                         else
@@ -280,7 +298,7 @@ namespace SexyProxy.Fody
                         // Load function pointer to proceed method
                         il.Emit(OpCodes.Ldarg_0);
                         il.Emit(OpCodes.Ldftn, proceed);
-                        il.Emit(OpCodes.Newobj, ModuleDefinition.Import(proceedDelegateType.GetConstructors().First()));
+                        il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
 
                         // Instantiate Invocation
                         il.Emit(OpCodes.Newobj, invocationConstructor);
@@ -298,6 +316,8 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Ret);
                 });
                 ModuleDefinition.Types.Add(type);
+
+                sourceType.Fields.Add(new FieldDefinition("$proxy", FieldAttributes.Private | FieldAttributes.Static, type));
             }
         }
     }

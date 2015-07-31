@@ -6,7 +6,7 @@ namespace SexyProxy
     {
         public static IProxyTypeFactory CreateProxyTypeFactory()
         {
-            return new EmitProxyTypeFactory();
+            return new FodyProxyTypeFactory();
         }
     }
 }
