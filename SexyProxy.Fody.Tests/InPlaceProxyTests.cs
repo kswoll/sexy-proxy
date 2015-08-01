@@ -23,7 +23,6 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("22", result);            
         }
 
-        [Proxy]
         public class TestClass : IProxy
         {
             public InvocationHandler InvocationHandler { get; }
@@ -46,7 +45,6 @@ namespace SexyProxy.Fody.Tests
             }
         }
 
-        [Proxy]
         public class AbstractClass : IProxy
         {
             public InvocationHandler InvocationHandler { get; }
