@@ -1,6 +1,6 @@
-﻿using System;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace SexyProxy.Fody
 {
@@ -10,12 +10,40 @@ namespace SexyProxy.Fody
         {
         }
 
-        protected override void ProxyMethod(MethodDefinition methodInfo)
+        protected override OpCode GetProceedCallOpCode()
         {
-            // Check the source method for any usages of this.Invocation()
-            for (var i = 0; i < methodInfo.Body.Instructions.Count; i++)
+            return OpCodes.Call;
+        }
+
+        protected override void EmitInvocationHandler(ILProcessor il)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Call, Context.ProxyGetInvocationHandlerMethod);
+        }
+
+        protected override void EmitProceedTarget(ILProcessor il)
+        {
+            il.Emit(OpCodes.Ldarg_0);
+        }
+
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body)
+        {
+            // Create a new method for the original implementation
+            var method = new MethodDefinition(methodInfo.Name + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
+            foreach (var parameter in methodInfo.Parameters)
             {
-                var instruction = methodInfo.Body.Instructions[i];
+                method.Parameters.Add(parameter);
+            }
+            method.Body = new MethodBody(method);
+            foreach (var variable in methodInfo.Body.Variables)
+            {
+                method.Body.Variables.Add(variable);
+            }
+            foreach (var instruction in methodInfo.Body.Instructions)
+            {
+                method.Body.GetILProcessor().Append(instruction);
+/*
+                // Check the source method for any usages of this.Invocation()
                 if (instruction.OpCode == OpCodes.Call)
                 {
                     var methodReference = (MethodReference)instruction.Operand;
@@ -29,17 +57,34 @@ namespace SexyProxy.Fody
                         methodInfo.Body.Instructions.RemoveAt(i - 1);
                     }
                 }
+*/
             }
+
+            // Now create a new method body
+            methodInfo.Body = new MethodBody(methodInfo);
+
+
         }
 
         protected override TypeDefinition GetProxyType()
         {
-            throw new NotImplementedException();
+            return SourceType;
         }
 
         protected override MethodDefinition GetStaticConstructor()
         {
-            throw new NotImplementedException();
+            var staticConstructor = ProxyType.GetStaticConstructor();
+            if (staticConstructor == null)
+            {
+                staticConstructor = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Context.ModuleDefinition.TypeSystem.Void);
+                staticConstructor.Body = new MethodBody(staticConstructor);
+                ProxyType.Methods.Add(staticConstructor);
+            }
+            else
+            {
+                staticConstructor.Body.Instructions.RemoveAt(staticConstructor.Body.Instructions.Count - 1);
+            }            
+            return staticConstructor;
         }
     }
 }

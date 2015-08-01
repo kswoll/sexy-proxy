@@ -50,6 +50,7 @@ namespace SexyProxy.Fody
             var invokeTMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "InvokeT"));
             var asyncInvokeTMethod = invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT");
             var objectType = ModuleDefinition.Import(typeof(object));
+            var proxyGetInvocationHandlerMethod = ModuleDefinition.Import(proxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
 
             var context = new WeaverContext
             {
@@ -72,16 +73,18 @@ namespace SexyProxy.Fody
                 ObjectType = objectType,
                 VoidAsyncInvocationConstructor = voidAsyncInvocationConstructor,
                 VoidInvocationConstructor = voidInvocationConstructor,
-                VoidInvokeMethod = voidInvokeMethod
+                VoidInvokeMethod = voidInvokeMethod,
+                ProxyGetInvocationHandlerMethod = proxyGetInvocationHandlerMethod
             };
 
             foreach (var sourceType in targetTypes)
             {
                 ClassWeaver classWeaver;
 
-                bool isIntf = sourceType.IsInterface;
-                if (isIntf)
+                if (sourceType.IsInterface)
                     classWeaver = new InterfaceClassWeaver(context, sourceType);
+                else if (proxyInterface.IsAssignableFrom(sourceType))
+                    classWeaver = new InPlaceClassWeaver(context, sourceType);
                 else
                     classWeaver = new NonInterfaceClassWeaver(context, sourceType);
 
