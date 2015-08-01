@@ -14,9 +14,11 @@
     <Compile Include="$(MSBuildThisFileDirectory)InvalidAsyncException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Invocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvocationHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IProxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxyTypeFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Proxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidAsyncInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidInvocation.cs" />
   </ItemGroup>

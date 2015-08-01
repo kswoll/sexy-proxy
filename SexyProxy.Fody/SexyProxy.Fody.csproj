@@ -58,10 +58,16 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ClassWeaver.cs" />
     <Compile Include="CecilExtensions.cs" />
+    <Compile Include="InPlaceClassWeaver.cs" />
+    <Compile Include="InterfaceClassWeaver.cs" />
     <Compile Include="ModuleWeaver.cs" />
+    <Compile Include="NonInterfaceClassWeaver.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SexyProxyWeaver.cs" />
+    <Compile Include="TargetedClassWeaver.cs" />
+    <Compile Include="WeaverContext.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

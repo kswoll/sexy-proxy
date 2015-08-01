@@ -22,7 +22,7 @@ namespace SexyProxy.Fody
             CecilExtensions.LogWarning = LogWarning;
             CecilExtensions.Initialize(ModuleDefinition);
 
-            var propertyWeaver = new SexyPropertyWeaver
+            var propertyWeaver = new SexyProxyWeaver
             {
                 ModuleDefinition = ModuleDefinition,
                 LogInfo = LogInfo,
