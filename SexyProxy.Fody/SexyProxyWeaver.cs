@@ -31,7 +31,7 @@ namespace SexyProxy.Fody
             var proxyAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyAttribute", sexyProxy);
             if (proxyAttribute == null)
                 throw new Exception($"{nameof(proxyAttribute)} is null");
-            var proxyInterface = ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy);
+            var proxyInterface = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy));
 
             var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || x.Interfaces.Any(y => y.CompareTo(proxyInterface))).ToArray();
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
@@ -40,17 +40,18 @@ namespace SexyProxy.Fody
             var action1Type = ModuleDefinition.Import(typeof(Action<>));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
             var taskType = ModuleDefinition.Import(typeof(Task));
-            var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
-            var asyncInvocationTType = ModuleDefinition.FindType("SexyProxy", "AsyncInvocationT`1", sexyProxy, "T").Resolve();
-            var invocationHandlerType = ModuleDefinition.FindType("SexyProxy", "InvocationHandler", sexyProxy);
+            var invocationTType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T"));
+            var asyncInvocationTType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "AsyncInvocationT`1", sexyProxy, "T"));
+            var invocationHandlerType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "InvocationHandler", sexyProxy));
             var voidInvocationConstructor = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "VoidInvocation", sexyProxy).Resolve().GetConstructors().Single());
             var voidAsyncInvocationConstructor = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "VoidAsyncInvocation", sexyProxy).Resolve().GetConstructors().Single());
             var voidInvokeMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "VoidInvoke"));
             var asyncVoidInvokeMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "VoidAsyncInvoke"));
             var invokeTMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "InvokeT"));
-            var asyncInvokeTMethod = invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT");
+            var asyncInvokeTMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT"));
             var objectType = ModuleDefinition.Import(typeof(object));
             var proxyGetInvocationHandlerMethod = ModuleDefinition.Import(proxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
+            var invocationType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "Invocation", sexyProxy));
 
             var context = new WeaverContext
             {
@@ -74,7 +75,8 @@ namespace SexyProxy.Fody
                 VoidAsyncInvocationConstructor = voidAsyncInvocationConstructor,
                 VoidInvocationConstructor = voidInvocationConstructor,
                 VoidInvokeMethod = voidInvokeMethod,
-                ProxyGetInvocationHandlerMethod = proxyGetInvocationHandlerMethod
+                ProxyGetInvocationHandlerMethod = proxyGetInvocationHandlerMethod,
+                InvocationType = invocationType
             };
 
             foreach (var sourceType in targetTypes)

@@ -26,5 +26,6 @@ namespace SexyProxy.Fody
         public MethodReference AsyncInvokeTMethod { get; set; }
         public TypeReference ObjectType { get; set; }
         public MethodReference ProxyGetInvocationHandlerMethod { get; set; }
+        public TypeReference InvocationType { get; set; }
     }
 }

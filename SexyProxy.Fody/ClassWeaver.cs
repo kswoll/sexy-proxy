@@ -48,7 +48,7 @@ namespace SexyProxy.Fody
             StaticConstructor = GetStaticConstructor();
 
             // Now implement/override all methods
-            foreach (var methodInfo in Methods)
+            foreach (var methodInfo in Methods.ToArray())
             {
                 var parameterInfos = methodInfo.Parameters;
 
@@ -139,52 +139,77 @@ namespace SexyProxy.Fody
 
             proceed.Body.Emit(il =>
             {
-                ImplementProceed(methodInfo, il, proceedTargetMethod);
+                ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor, 
+                    invokeMethod, proceedTargetMethod);
             });
-
-            var parameterInfos = methodInfo.Parameters;
 
             // Implement method
             body.Emit(il =>
             {
-                // Load handler
-                EmitInvocationHandler(il);
-
-                // Load method info
-                il.Emit(OpCodes.Ldsfld, methodInfoField);
-
-                // Create arguments array
-                il.Emit(OpCodes.Ldc_I4, parameterInfos.Count);         // Array length
-                il.Emit(OpCodes.Newarr, Context.ModuleDefinition.TypeSystem.Object);                // Instantiate array
-                for (var i = 0; i < parameterInfos.Count; i++)
-                {
-                    il.Emit(OpCodes.Dup);                               // Duplicate array
-                    il.Emit(OpCodes.Ldc_I4, i);                         // Array index
-                    il.Emit(OpCodes.Ldarg, (short)(i + 1));             // Element value
-
-                    if (parameterInfos[i].ParameterType.IsValueType)
-                        il.Emit(OpCodes.Box, parameterInfos[i].ParameterType);
-
-                    il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);            // Set array at index to element value
-                }
-
-                // Load function pointer to proceed method
-                il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Ldftn, proceed);
-                il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
-
-                // Instantiate Invocation
-                il.Emit(OpCodes.Newobj, invocationConstructor);
-
-                // Invoke handler
-                il.Emit(OpCodes.Callvirt, invokeMethod);
-
-                // Return
-                il.Emit(OpCodes.Ret);
+                ImplementBody(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
+                    invocationConstructor, invokeMethod);
             });
         }
 
-        protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, MethodDefinition proceedTargetMethod)
+        protected virtual void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
+            MethodReference invokeMethod)
+        {
+            EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
+                invocationConstructor, invokeMethod);
+
+            // Return
+            il.Emit(OpCodes.Ret);            
+        }
+            
+        protected void EmitCallToInvocationHandler(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
+            MethodReference invokeMethod)
+        {
+            // Load handler (consumed by call to invokeMethod near the end)
+            EmitInvocationHandler(il);
+
+            // Put Invocation onto the stack
+            EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor);
+
+            // Invoke handler
+            il.Emit(OpCodes.Callvirt, invokeMethod);
+        }
+
+        protected void EmitInvocation(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor)
+        {
+            // Load method info
+            il.Emit(OpCodes.Ldsfld, methodInfoField);
+
+            // Create arguments array
+            var parameterInfos = methodInfo.Parameters;
+            il.Emit(OpCodes.Ldc_I4, parameterInfos.Count);                          // Array length
+            il.Emit(OpCodes.Newarr, Context.ModuleDefinition.TypeSystem.Object);    // Instantiate array
+            for (var i = 0; i < parameterInfos.Count; i++)
+            {
+                il.Emit(OpCodes.Dup);                               // Duplicate array
+                il.Emit(OpCodes.Ldc_I4, i);                         // Array index
+                il.Emit(OpCodes.Ldarg, (short)(i + 1));             // Element value
+
+                if (parameterInfos[i].ParameterType.IsValueType)
+                    il.Emit(OpCodes.Box, Context.ModuleDefinition.Import(parameterInfos[i].ParameterType));
+
+                il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
+            }
+
+            // Load function pointer to proceed method
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldftn, proceed);
+            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+
+            // Instantiate Invocation
+            il.Emit(OpCodes.Newobj, invocationConstructor);
+        }
+
+        protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
+            MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
         {
             var parameterInfos = methodInfo.Parameters;
 
@@ -194,12 +219,12 @@ namespace SexyProxy.Fody
             // Decompose array into arguments
             for (int i = 0; i < parameterInfos.Count; i++)
             {
-                il.Emit(OpCodes.Ldarg, 1);                                           // Push array 
-                il.Emit(OpCodes.Ldc_I4, i);                                          // Push element index
+                il.Emit(OpCodes.Ldarg, 1);                                                   // Push array 
+                il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element
-                if (parameterInfos[i].ParameterType.IsValueType)
+                if (parameterInfos[i].ParameterType.IsValueType)                             // If it's a value type, unbox it
                     il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType);
-                else
+                else                                                                         // Otherwise, cast it
                     il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
             }
 

@@ -1,8 +1,9 @@
-﻿using NUnit.Framework;
+﻿using System;
+using System.Threading.Tasks;
+using NUnit.Framework;
 
 namespace SexyProxy.Fody.Tests
 {
-/*
     [TestFixture]
     public class NonVirtualMethods
     {
@@ -17,6 +18,13 @@ namespace SexyProxy.Fody.Tests
         [Proxy]
         public class TestClass : IProxy
         {
+            public InvocationHandler InvocationHandler { get; } = new InvocationHandler(Handler);
+
+            private static Task<object> Handler(Invocation invocation)
+            {
+                return invocation.Proceed();
+            }
+
             public string NoChange(int number)
             {
                 var result = (string)this.Invocation().Proceed().Result;
@@ -30,5 +38,4 @@ namespace SexyProxy.Fody.Tests
             }
         } 
     }
-*/
 }

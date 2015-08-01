@@ -35,7 +35,9 @@ namespace SexyProxy.Fody
             return OpCodes.Callvirt;
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, MethodDefinition proceedTargetMethod)
+        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
+            MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
         {
             // If T is an interface, then we want to check if target is null; if so, we want to just return the default value
             var targetNotNull = il.Create(OpCodes.Nop);
@@ -46,7 +48,8 @@ namespace SexyProxy.Fody
 
             il.Append(targetNotNull);                    // Mark where the previous branch instruction should jump to                        
 
-            base.ImplementProceed(methodInfo, il, proceedTargetMethod);
+            base.ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
+                invocationConstructor, invokeMethod, proceedTargetMethod);
         }
     }
 }
