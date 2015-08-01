@@ -36,14 +36,14 @@ namespace SexyProxy.Fody
         }
 
         protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
-            MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
         {
             if (methodInfo.IsAbstract)
                 CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
             else
                 base.ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-                    invocationConstructor, invokeMethod, proceedTargetMethod);
+                    invocationType, invocationConstructor, invokeMethod, proceedTargetMethod);
         }
     }
 }

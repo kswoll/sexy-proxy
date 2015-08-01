@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -55,6 +56,8 @@ namespace SexyProxy.Fody
                 // Finalize doesn't work if we try to proxy it and really, who cares?
                 if (methodInfo.Name == "Finalize" && parameterInfos.Count == 0 && methodInfo.DeclaringType.CompareTo(Context.ModuleDefinition.TypeSystem.Object.Resolve()))
                     continue;
+                if (methodInfo.IsConstructor)
+                    continue;
 
                 ProxyMethod(methodInfo, methodInfo.Body, methodInfo);
             }
@@ -94,6 +97,7 @@ namespace SexyProxy.Fody
             GenericInstanceType proceedDelegateType;
             MethodReference proceedDelegateTypeConstructor;
             TypeReference proceedReturnType;
+            TypeReference invocationType;
             MethodReference invocationConstructor;
             MethodReference invokeMethod;
 
@@ -102,6 +106,7 @@ namespace SexyProxy.Fody
                 proceedDelegateType = Context.Action1Type.MakeGenericInstanceType(Context.ObjectArrayType);
                 proceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(proceedDelegateType);
                 proceedReturnType = Context.ModuleDefinition.Import(typeof(void));
+                invocationType = Context.VoidInvocationType;
                 invocationConstructor = Context.VoidInvocationConstructor;
                 invokeMethod = Context.VoidInvokeMethod;
             }
@@ -112,21 +117,26 @@ namespace SexyProxy.Fody
                 proceedReturnType = Context.ModuleDefinition.Import(methodInfo.ReturnType);
                 if (!Context.TaskType.IsAssignableFrom(methodInfo.ReturnType))
                 {
-                    var invocationType = Context.InvocationTType.MakeGenericInstanceType(methodInfo.ReturnType.Resolve());
+                    // !!! This might have been the cause of the error not finding InvocationHandler type since IProxy.InvocationHandler hadn't been ignored yet and we're not importing the return type
+                    // Create some unit tests that return custom types from a separate assembly
+                    var genericInvocationType = Context.InvocationTType.MakeGenericInstanceType(methodInfo.ReturnType.Resolve());
+                    invocationType = genericInvocationType;
                     var unconstructedConstructor = Context.ModuleDefinition.Import(Context.InvocationTType.Resolve().GetConstructors().First());
-                    invocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(invocationType));
+                    invocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(genericInvocationType));
                     invokeMethod = Context.ModuleDefinition.Import(Context.InvokeTMethod.MakeGenericMethod(methodInfo.ReturnType.Resolve()));
                 }
                 else if (methodInfo.ReturnType.IsTaskT())
                 {
                     var taskTType = methodInfo.ReturnType.GetTaskType();
-                    var invocationType = Context.AsyncInvocationTType.MakeGenericInstanceType(taskTType);
+                    var genericInvocationType = Context.AsyncInvocationTType.MakeGenericInstanceType(taskTType);
+                    invocationType = genericInvocationType;
                     var unconstructedConstructor = Context.ModuleDefinition.Import(Context.AsyncInvocationTType.Resolve().GetConstructors().First());
-                    invocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(invocationType));
+                    invocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(genericInvocationType));
                     invokeMethod = Context.ModuleDefinition.Import(Context.AsyncInvokeTMethod.MakeGenericMethod(taskTType));
                 }
                 else
                 {
+                    invocationType = Context.VoidAsyncInvocationType;
                     invocationConstructor = Context.VoidAsyncInvocationConstructor;
                     invokeMethod = Context.AsyncVoidInvokeMethod;
                 }
@@ -139,7 +149,7 @@ namespace SexyProxy.Fody
 
             proceed.Body.Emit(il =>
             {
-                ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor, 
+                ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, 
                     invokeMethod, proceedTargetMethod);
             });
 
@@ -147,44 +157,59 @@ namespace SexyProxy.Fody
             body.Emit(il =>
             {
                 ImplementBody(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-                    invocationConstructor, invokeMethod);
+                    invocationType, invocationConstructor, invokeMethod);
             });
         }
 
         protected virtual void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
-            MethodReference invokeMethod)
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod)
         {
             EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-                invocationConstructor, invokeMethod);
+                invocationType, invocationConstructor, invokeMethod);
 
             // Return
             il.Emit(OpCodes.Ret);            
         }
             
         protected void EmitCallToInvocationHandler(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
-            MethodReference invokeMethod)
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod)
         {
             // Load handler (consumed by call to invokeMethod near the end)
             EmitInvocationHandler(il);
 
             // Put Invocation onto the stack
-            EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor);
+            EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor);
 
             // Invoke handler
             il.Emit(OpCodes.Callvirt, invokeMethod);
         }
 
         protected void EmitInvocation(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor)
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor)
         {
             // Load method info
             il.Emit(OpCodes.Ldsfld, methodInfoField);
 
             // Create arguments array
+            EmitInvocationArgumentsArray(methodInfo, il, methodInfo.Parameters.Count);
+
+            // Load function pointer to proceed method
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldftn, proceed);
+            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
+
+            // Instantiate Invocation
+//            il.Emit(OpCodes.Ldnull);
+            il.Emit(OpCodes.Newobj, invocationConstructor);
+        }
+
+        protected virtual void EmitInvocationArgumentsArray(MethodDefinition methodInfo, ILProcessor il, int size)
+        {
             var parameterInfos = methodInfo.Parameters;
-            il.Emit(OpCodes.Ldc_I4, parameterInfos.Count);                          // Array length
+            il.Emit(OpCodes.Ldc_I4, size);                          // Array length
             il.Emit(OpCodes.Newarr, Context.ModuleDefinition.TypeSystem.Object);    // Instantiate array
             for (var i = 0; i < parameterInfos.Count; i++)
             {
@@ -196,20 +221,12 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Box, Context.ModuleDefinition.Import(parameterInfos[i].ParameterType));
 
                 il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
-            }
-
-            // Load function pointer to proceed method
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldftn, proceed);
-            il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
-
-            // Instantiate Invocation
-            il.Emit(OpCodes.Newobj, invocationConstructor);
+            }            
         }
 
         protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
-            MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
         {
             var parameterInfos = methodInfo.Parameters;
 

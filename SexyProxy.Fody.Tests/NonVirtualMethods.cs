@@ -10,7 +10,7 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public void MyMethodReturnsFoo()
         {
-            var proxy = Proxy.CreateProxy<TestClass>(x => "foo");
+            var proxy = new TestClass(x => Task.FromResult<object>("foo"));
             var result = proxy.NoChange(0);
             Assert.AreEqual("foo", result);
         }
@@ -18,7 +18,12 @@ namespace SexyProxy.Fody.Tests
         [Proxy]
         public class TestClass : IProxy
         {
-            public InvocationHandler InvocationHandler { get; } = new InvocationHandler(Handler);
+            public InvocationHandler InvocationHandler { get; }
+
+            public TestClass(Func<Invocation, Task<object>> handler)
+            {
+                InvocationHandler = new InvocationHandler(handler);
+            }
 
             private static Task<object> Handler(Invocation invocation)
             {
@@ -27,6 +32,7 @@ namespace SexyProxy.Fody.Tests
 
             public string NoChange(int number)
             {
+//                var result = InvocationHandler.
                 var result = (string)this.Invocation().Proceed().Result;
                 return result;
             }

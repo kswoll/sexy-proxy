@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 
@@ -26,12 +27,16 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ldarg_0);
         }
 
-        protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField, MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor, MethodReference invokeMethod)
+        protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField, 
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod)
         {
+            Context.LogInfo($"{methodInfo}");
+
             // If it's abstract, then the method is entirely implemented by the InvocationHandler
             if (methodInfo.IsAbstract)
             {
-                base.ImplementBody(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor, invokeMethod);
+                base.ImplementBody(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod);
             }
             // Otherwise, it is implemented by the class itself, and calling this.Invocation().Proceed() calls the InvocationHandler
             else
@@ -43,8 +48,15 @@ namespace SexyProxy.Fody
                 methodInfo.Body.Variables.Add(invocation);
 //                il.Emit(OpCodes.Ldnull);
 //                EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor, invokeMethod);
-                EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor);
+                EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor);
+                il.Emit(OpCodes.Dup);                               // Duplicate invocation for below
                 il.Emit(OpCodes.Stloc, invocation);
+
+                // Add the invocation to the end of the array
+                il.Emit(OpCodes.Call, Context.InvocationGetArguments);  // Array now on the stack with the invocation above it
+                il.Emit(OpCodes.Ldc_I4, methodInfo.Parameters.Count);   // Array index
+                il.Emit(OpCodes.Ldloc, invocation);                     // Element value
+                il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
 
                 // Now add all the instructions back, but transforming this.Invocation() if present
                 for (var i = 0; i < instructions.Length; i++)
@@ -68,21 +80,48 @@ namespace SexyProxy.Fody
             }
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, MethodReference invocationConstructor,
-            MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+        protected override void EmitInvocationArgumentsArray(MethodDefinition methodInfo, ILProcessor il, int size)
         {
-//            if (methodInfo.IsAbstract)
-//            {
+            base.EmitInvocationArgumentsArray(methodInfo, il, size + 1);
+        }
+
+        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
+            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+            MethodReference invocationConstructor, MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+        {
+            if (methodInfo.IsAbstract)
+            {
                 // Always return the default value
                 CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
-//            }
-//            else
-//            {
-//                EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-//                    invocationConstructor, invokeMethod);
-//            }
+            }
+            else
+            {
+                // Load handler (consumed by call to invokeMethod near the end)
+                EmitInvocationHandler(il);
+
+                // Put Invocation onto the stack
+                il.Emit(OpCodes.Ldarg_1);                                                   // Array
+                il.Emit(OpCodes.Ldc_I4, methodInfo.Parameters.Count);                       // Array index
+                il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);    // Load element
+                il.Emit(OpCodes.Castclass, invocationType);                                 // Cast it into specific invocation subclass
+
+                // Invoke handler
+                il.Emit(OpCodes.Callvirt, invokeMethod);
+
+                // Return from method
+                il.Emit(OpCodes.Ret);
+            }
         }
+
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
+        {
+//            methodInfo.
+            if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
+                return;
+
+            base.ProxyMethod(methodInfo, body, proceedTargetMethod);
+        }
+
 /*
 
         protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
