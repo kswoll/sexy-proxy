@@ -8,11 +8,19 @@ namespace SexyProxy.Fody.Tests
     public class NonVirtualMethods
     {
         [Test]
-        public void MyMethodReturnsFoo()
+        public void NoChangeReturnsFoo()
         {
             var proxy = new TestClass(x => Task.FromResult<object>("foo"));
             var result = proxy.NoChange(0);
             Assert.AreEqual("foo", result);
+        }
+
+        [Test]
+        public void AlterReturns22()
+        {
+            var proxy = new TestClass(x => Task.FromResult<object>(x.Arguments[0].ToString()));
+            var result = proxy.Alter(2);
+            Assert.AreEqual("22", result);            
         }
 
         [Proxy]
@@ -25,14 +33,8 @@ namespace SexyProxy.Fody.Tests
                 InvocationHandler = new InvocationHandler(handler);
             }
 
-            private static Task<object> Handler(Invocation invocation)
-            {
-                return invocation.Proceed();
-            }
-
             public string NoChange(int number)
             {
-//                var result = InvocationHandler.
                 var result = (string)this.Invocation().Proceed().Result;
                 return result;
             }

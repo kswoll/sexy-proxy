@@ -46,8 +46,6 @@ namespace SexyProxy.Fody
                 var instructions = methodInfo.Body.Instructions.ToArray();
                 methodInfo.Body.Instructions.Clear();
                 methodInfo.Body.Variables.Add(invocation);
-//                il.Emit(OpCodes.Ldnull);
-//                EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationConstructor, invokeMethod);
                 EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor);
                 il.Emit(OpCodes.Dup);                               // Duplicate invocation for below
                 il.Emit(OpCodes.Stloc, invocation);
