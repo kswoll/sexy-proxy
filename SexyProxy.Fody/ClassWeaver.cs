@@ -56,7 +56,7 @@ namespace SexyProxy.Fody
                 if (methodInfo.Name == "Finalize" && parameterInfos.Count == 0 && methodInfo.DeclaringType.CompareTo(Context.ModuleDefinition.TypeSystem.Object.Resolve()))
                     continue;
 
-                ProxyMethod(methodInfo, methodInfo.Body);
+                ProxyMethod(methodInfo, methodInfo.Body, methodInfo);
             }
 
             StaticConstructor.Body.Emit(il =>
@@ -67,7 +67,7 @@ namespace SexyProxy.Fody
             Finish();
         }
 
-        protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body)
+        protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
         {
             // Initialize method info in static constructor
             var methodInfoField = new FieldDefinition(methodInfo.Name + "__Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
@@ -139,7 +139,7 @@ namespace SexyProxy.Fody
 
             proceed.Body.Emit(il =>
             {
-                ImplementProceed(methodInfo, il);
+                ImplementProceed(methodInfo, il, proceedTargetMethod);
             });
 
             var parameterInfos = methodInfo.Parameters;
@@ -184,7 +184,7 @@ namespace SexyProxy.Fody
             });
         }
 
-        protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il)
+        protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, MethodDefinition proceedTargetMethod)
         {
             var parameterInfos = methodInfo.Parameters;
 
@@ -203,7 +203,7 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
             }
 
-            il.Emit(GetProceedCallOpCode(), methodInfo);
+            il.Emit(GetProceedCallOpCode(), proceedTargetMethod);
             il.Emit(OpCodes.Ret);                    
         }
     }

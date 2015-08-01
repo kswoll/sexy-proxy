@@ -35,12 +35,12 @@ namespace SexyProxy.Fody
             return OpCodes.Call;
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il)
+        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, MethodDefinition proceedTargetMethod)
         {
             if (methodInfo.IsAbstract)
                 CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
             else
-                base.ImplementProceed(methodInfo, il);
+                base.ImplementProceed(methodInfo, il, proceedTargetMethod);
         }
     }
 }

@@ -26,22 +26,22 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ldarg_0);
         }
 
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body)
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
         {
             // Create a new method for the original implementation
-            var method = new MethodDefinition(methodInfo.Name + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
+            var originalMethod = new MethodDefinition(methodInfo.Name + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
             foreach (var parameter in methodInfo.Parameters)
             {
-                method.Parameters.Add(parameter);
+                originalMethod.Parameters.Add(parameter);
             }
-            method.Body = new MethodBody(method);
+            originalMethod.Body = new MethodBody(originalMethod);
             foreach (var variable in methodInfo.Body.Variables)
             {
-                method.Body.Variables.Add(variable);
+                originalMethod.Body.Variables.Add(variable);
             }
             foreach (var instruction in methodInfo.Body.Instructions)
             {
-                method.Body.GetILProcessor().Append(instruction);
+                originalMethod.Body.GetILProcessor().Append(instruction);
 /*
                 // Check the source method for any usages of this.Invocation()
                 if (instruction.OpCode == OpCodes.Call)
@@ -63,7 +63,7 @@ namespace SexyProxy.Fody
             // Now create a new method body
             methodInfo.Body = new MethodBody(methodInfo);
 
-
+            base.ProxyMethod(methodInfo, methodInfo.Body, originalMethod);
         }
 
         protected override TypeDefinition GetProxyType()

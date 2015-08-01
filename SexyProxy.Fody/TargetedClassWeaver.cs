@@ -1,7 +1,6 @@
 ﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 
 namespace SexyProxy.Fody
 {
@@ -107,7 +106,7 @@ namespace SexyProxy.Fody
 
         protected abstract MethodAttributes GetMethodAttributes(MethodDefinition methodInfo);
 
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body)
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
         {
 //                    var isImplemented = !isIntf && methodInfo.IsFinal;
             MethodAttributes methodAttributes = GetMethodAttributes(methodInfo);
@@ -121,7 +120,7 @@ namespace SexyProxy.Fody
 
             method.Body = new MethodBody(method);
 
-            base.ProxyMethod(methodInfo, method.Body);
+            base.ProxyMethod(methodInfo, method.Body, proceedTargetMethod);
         }
     }
 }
