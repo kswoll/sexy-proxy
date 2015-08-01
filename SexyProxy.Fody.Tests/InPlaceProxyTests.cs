@@ -5,7 +5,7 @@ using NUnit.Framework;
 namespace SexyProxy.Fody.Tests
 {
     [TestFixture]
-    public class NonVirtualMethods
+    public class InPlaceProxyTests
     {
         [Test]
         public void NoChangeReturnsFoo()
@@ -44,6 +44,18 @@ namespace SexyProxy.Fody.Tests
                 var result = this.Invocation().Proceed().Result;
                 return (string)result + (string)result;
             }
-        } 
+        }
+
+        [Proxy]
+        public class AbstractClass : IProxy
+        {
+            public InvocationHandler InvocationHandler { get; }
+
+            public AbstractClass(Func<Invocation, Task<object>> handler)
+            {
+                InvocationHandler = new InvocationHandler(handler);
+            }
+            
+        }
     }
 }

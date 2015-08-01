@@ -31,8 +31,6 @@ namespace SexyProxy.Fody
             MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
             MethodReference invocationConstructor, MethodReference invokeMethod)
         {
-            Context.LogInfo($"{methodInfo}");
-
             // If it's abstract, then the method is entirely implemented by the InvocationHandler
             if (methodInfo.IsAbstract)
             {
@@ -63,7 +61,6 @@ namespace SexyProxy.Fody
                     var nextInstruction = i < instructions.Length - 1 ? instructions[i + 1] : null;
                     if (nextInstruction != null && nextInstruction.OpCode == OpCodes.Call)
                     {
-                        Context.LogInfo(nextInstruction.ToString());
                         var methodReference = (MethodReference)nextInstruction.Operand;
                         if (methodReference.FullName == "SexyProxy.Invocation SexyProxy.ProxyExtensions::Invocation(SexyProxy.IProxy)")
                         {

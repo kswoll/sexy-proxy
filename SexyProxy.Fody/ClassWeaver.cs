@@ -117,13 +117,14 @@ namespace SexyProxy.Fody
                 proceedReturnType = Context.ModuleDefinition.Import(methodInfo.ReturnType);
                 if (!Context.TaskType.IsAssignableFrom(methodInfo.ReturnType))
                 {
-                    // !!! This might have been the cause of the error not finding InvocationHandler type since IProxy.InvocationHandler hadn't been ignored yet and we're not importing the return type
+                    // !!! This WAS the cause of the error not finding InvocationHandler type since IProxy.InvocationHandler hadn't been ignored yet and we're not importing the return type
                     // Create some unit tests that return custom types from a separate assembly
-                    var genericInvocationType = Context.InvocationTType.MakeGenericInstanceType(methodInfo.ReturnType.Resolve());
+                    var returnType = Context.ModuleDefinition.Import(methodInfo.ReturnType);
+                    var genericInvocationType = Context.InvocationTType.MakeGenericInstanceType(returnType);
                     invocationType = genericInvocationType;
                     var unconstructedConstructor = Context.ModuleDefinition.Import(Context.InvocationTType.Resolve().GetConstructors().First());
                     invocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(genericInvocationType));
-                    invokeMethod = Context.ModuleDefinition.Import(Context.InvokeTMethod.MakeGenericMethod(methodInfo.ReturnType.Resolve()));
+                    invokeMethod = Context.ModuleDefinition.Import(Context.InvokeTMethod.MakeGenericMethod(returnType));
                 }
                 else if (methodInfo.ReturnType.IsTaskT())
                 {
