@@ -1,0 +1,15 @@
+<package>
+  <metadata>
+    <id>SexyProxy</id>
+    <version>1.00</version>
+    <authors>kirk</authors>
+    <owners>kirk</owners>
+    <projectUrl>https://github.com/kswoll/sexy-proxy</projectUrl>
+    <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+	  <releaseNotes>Initial release.</releaseNotes>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Proxy library with support for async operations.</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>sexy-proxy async proxy</tags>
+  </metadata>
+</package>
