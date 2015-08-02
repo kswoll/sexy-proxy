@@ -118,16 +118,22 @@ namespace SexyProxy
 
     public static class Proxy<T>
     {
+        private static bool isInPlace = typeof(IProxy).IsAssignableFrom(typeof(T));
         private static Type proxyType = CreateProxyType();
 
         public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler)
         {
-            return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler));
+            if (isInPlace)
+                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler));
+            else
+                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler));
         }
 
         private static Type CreateProxyType()
         {
-            if (Attribute.IsDefined(typeof(T), typeof(ProxyAttribute)))
+            if (isInPlace)
+                return typeof(T);
+            else if (Attribute.IsDefined(typeof(T), typeof(ProxyAttribute)))
                 return new FodyProxyTypeFactory().CreateProxyType(typeof(T));
             else
                 return new EmitProxyTypeFactory().CreateProxyType(typeof(T));

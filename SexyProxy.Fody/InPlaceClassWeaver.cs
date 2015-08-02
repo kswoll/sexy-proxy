@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -27,6 +28,14 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ldarg_0);
         }
 
+        protected override void InitializeProxyType()
+        {
+            base.InitializeProxyType();
+
+//            if (ProxyType.IsAbstract)
+//                ProxyType.IsAbstract = false;
+        }
+
         protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField, 
             MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
             MethodReference invocationConstructor, MethodReference invokeMethod)
@@ -39,6 +48,8 @@ namespace SexyProxy.Fody
             // Otherwise, it is implemented by the class itself, and calling this.Invocation().Proceed() calls the InvocationHandler
             else
             {
+                methodInfo.Body.InitLocals = true;
+
                 // First declare the invocation in a private local variable
                 var invocation = new VariableDefinition(Context.InvocationType);
                 var instructions = methodInfo.Body.Instructions.ToArray();
@@ -114,7 +125,30 @@ namespace SexyProxy.Fody
             if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
                 return;
 
+            Context.LogInfo($"{methodInfo}");
+
+            if (methodInfo.IsAbstract)
+            {
+                // If it's abstract, we need to implement a default implementation
+                body = methodInfo.Body = new MethodBody(methodInfo);
+            }
+
             base.ProxyMethod(methodInfo, body, proceedTargetMethod);
+
+            if (methodInfo.IsAbstract)
+            {
+                methodInfo.IsAbstract = false;
+            }
+        }
+
+        protected override void Finish()
+        {
+            ProxyType.IsAbstract = false;
+
+            // Ensure constructor is public
+            ProxyType.GetConstructors().Single(x => !x.IsStatic).IsPublic = true;
+
+            base.Finish();
         }
 
 /*

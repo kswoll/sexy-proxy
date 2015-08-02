@@ -23,6 +23,14 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("22", result);            
         }
 
+        [Test]
+        public void AbstractNoChangeReturnsFoo()
+        {
+            var proxy = Proxy.CreateProxy<AbstractClass>(x => Task.FromResult<object>("foo"));
+            var result = proxy.NoChange(0);
+            Assert.AreEqual("foo", result);
+        }
+
         public class TestClass : IProxy
         {
             public InvocationHandler InvocationHandler { get; }
@@ -45,15 +53,16 @@ namespace SexyProxy.Fody.Tests
             }
         }
 
-        public class AbstractClass : IProxy
+        public abstract class AbstractClass : IProxy
         {
             public InvocationHandler InvocationHandler { get; }
 
-            public AbstractClass(Func<Invocation, Task<object>> handler)
+            protected AbstractClass(InvocationHandler handler)
             {
-                InvocationHandler = new InvocationHandler(handler);
+                InvocationHandler = handler;
             }
-            
+
+            public abstract string NoChange(int number);
         }
     }
 }

@@ -10,7 +10,7 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public void GetHandler()
         {
-            var proxy = new OutsideReferenceClass(x => Task.FromResult<object>("foo"));
+            var proxy = new     OutsideReferenceClass(x => Task.FromResult<object>("foo"));
             var result = proxy.GetHandler();
             Assert.IsNotNull(result);
         }
