@@ -87,6 +87,7 @@ namespace SexyProxy.Fody
 
             foreach (var sourceType in targetTypes)
             {
+                LogInfo($"Emitting proxy for {sourceType.FullName}");
                 ClassWeaver classWeaver;
 
                 if (sourceType.IsInterface)

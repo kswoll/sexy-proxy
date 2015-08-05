@@ -111,7 +111,7 @@ namespace SexyProxy.Fody
         public static bool IsDefined(this IMemberDefinition member, TypeReference attributeType, bool inherit = false)
         {
             var typeIsDefined = member.HasCustomAttributes && member.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
-            if (inherit && member.DeclaringType?.BaseType != null)
+            if (!typeIsDefined && inherit && member.DeclaringType?.BaseType != null)
             {
                 typeIsDefined = member.DeclaringType.BaseType.Resolve().IsDefined(attributeType, true);
             }

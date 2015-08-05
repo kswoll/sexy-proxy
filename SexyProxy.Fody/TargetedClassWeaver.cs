@@ -9,7 +9,7 @@ namespace SexyProxy.Fody
         public FieldDefinition Target { get; private set; }
         public FieldDefinition InvocationHandler { get; private set; }
 
-        public TargetedClassWeaver(WeaverContext context, TypeDefinition sourceType) : base(context, sourceType)
+        protected TargetedClassWeaver(WeaverContext context, TypeDefinition sourceType) : base(context, sourceType)
         {
         }
 
@@ -22,7 +22,10 @@ namespace SexyProxy.Fody
 
         protected override TypeDefinition GetProxyType()
         {
-            var type = new TypeDefinition(SourceType.Namespace, SourceType.Name + "$Proxy", TypeAttributes.Public, BaseType);
+            var visibility = SourceType.Attributes & (TypeAttributes.Public | TypeAttributes.NestedPrivate | 
+                TypeAttributes.NestedFamily | TypeAttributes.NestedAssembly | TypeAttributes.NestedPublic | 
+                TypeAttributes.NestedFamANDAssem | TypeAttributes.NestedFamORAssem);
+            var type = new TypeDefinition(SourceType.Namespace, SourceType.Name + "$Proxy", visibility, BaseType);
             var intfs = GetInterfaces();
             foreach (var intf in intfs)
                 type.Interfaces.Add(intf);
@@ -101,7 +104,15 @@ namespace SexyProxy.Fody
         {
             base.Finish();
 
-            Context.ModuleDefinition.Types.Add(ProxyType);
+            if (SourceType.DeclaringType == null)
+            {
+                Context.ModuleDefinition.Types.Add(ProxyType);
+            }
+            else
+            {
+                Context.LogInfo($"Adding proxy as a nested type to: " + SourceType.DeclaringType);
+                SourceType.DeclaringType.NestedTypes.Add(ProxyType);
+            }
         }
 
         protected abstract MethodAttributes GetMethodAttributes(MethodDefinition methodInfo);

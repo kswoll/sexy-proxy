@@ -98,5 +98,19 @@ namespace SexyProxy.Fody.Tests
             var result = await proxy.SumAsync(1, 2);
             Assert.AreEqual(6, result);
         }
+
+        [Test]
+        public void InnerInterface()
+        {
+            var proxy = Proxy.CreateProxy<IInnerInterface>(invocation => "foo");
+            var result = proxy.GetString();
+            Assert.AreEqual("foo", result);
+        }
+
+        [Proxy]
+        private interface IInnerInterface
+        {
+            string GetString();
+        }
     }
 }

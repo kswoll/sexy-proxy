@@ -125,8 +125,6 @@ namespace SexyProxy.Fody
             if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
                 return;
 
-            Context.LogInfo($"{methodInfo}");
-
             if (methodInfo.IsAbstract)
             {
                 // If it's abstract, we need to implement a default implementation
