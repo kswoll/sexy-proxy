@@ -24,7 +24,8 @@ namespace SexyProxy
         public async Task<T> AsyncInvokeT<T>(AsyncInvocationT<T> invocation)
         {
             var task = GetTask(invocation);
-            return (T) await task;
+            var result = await task;
+            return (T)result;
         }
 
         public async Task VoidAsyncInvoke(VoidAsyncInvocation invocation)
