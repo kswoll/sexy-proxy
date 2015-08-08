@@ -16,6 +16,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)InvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxyTypeFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ISetInvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Proxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />

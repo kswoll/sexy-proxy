@@ -1,7 +1,7 @@
 <package>
   <metadata>
     <id>SexyProxy</id>
-    <version>1.00</version>
+    <version>1.0.1</version>
     <authors>kirk</authors>
     <owners>kirk</owners>
     <projectUrl>https://github.com/kswoll/sexy-proxy</projectUrl>

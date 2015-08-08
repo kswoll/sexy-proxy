@@ -33,7 +33,7 @@ namespace SexyProxy.Fody
                 throw new Exception($"{nameof(proxyAttribute)} is null");
             var proxyInterface = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy));
 
-            var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || x.Interfaces.Any(y => y.CompareTo(proxyInterface))).ToArray();
+            var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || proxyInterface.IsAssignableFrom(x)).ToArray();
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
 
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));

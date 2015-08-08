@@ -64,5 +64,39 @@ namespace SexyProxy.Fody.Tests
 
             public abstract string NoChange(int number);
         }
+
+        [Test]
+        public void InvocationHandlerSetter()
+        {
+            var proxy = Proxy.CreateProxy<SetInvocationHandler>(x => Task.FromResult<object>("foo"));
+            var result = proxy.NoChange(0);
+            Assert.AreEqual("foo", result);            
+        }
+
+        public abstract class SetInvocationHandler : IProxy, ISetInvocationHandler
+        {
+            public InvocationHandler InvocationHandler { get; set; }
+
+            public abstract string NoChange(int number);
+        }
+
+        [Test]
+        public async void AsyncClassWithInvocation()
+        {
+            var proxy = Proxy.CreateProxy<AsyncClass>(x => Task.FromResult<object>("foo"));
+            var result = await proxy.AsyncMethod(0);
+            Assert.AreEqual("foofoo", result);            
+        }
+
+        public class AsyncClass : IProxy, ISetInvocationHandler
+        {
+            public InvocationHandler InvocationHandler { get; set; }
+
+            public async Task<string> AsyncMethod(int number)
+            {
+                var result = (string)await this.Invocation().Proceed();
+                return result + result;
+            }
+        }
     }
 }

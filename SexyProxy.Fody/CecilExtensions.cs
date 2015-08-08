@@ -70,7 +70,7 @@ namespace SexyProxy.Fody
         {
             logger = logger ?? (x => {});
 
-            Queue<TypeDefinition> queue = new Queue<TypeDefinition>();
+            var queue = new Queue<TypeDefinition>();
             queue.Enqueue(type);
 
             while (queue.Any())

@@ -1,5 +1,4 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -26,14 +25,6 @@ namespace SexyProxy.Fody
         protected override void EmitProceedTarget(ILProcessor il)
         {
             il.Emit(OpCodes.Ldarg_0);
-        }
-
-        protected override void InitializeProxyType()
-        {
-            base.InitializeProxyType();
-
-//            if (ProxyType.IsAbstract)
-//                ProxyType.IsAbstract = false;
         }
 
         protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField, 
@@ -121,7 +112,6 @@ namespace SexyProxy.Fody
 
         protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
         {
-//            methodInfo.
             if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
                 return;
 
@@ -148,50 +138,6 @@ namespace SexyProxy.Fody
 
             base.Finish();
         }
-
-/*
-
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
-        {
-
-            // Create a new method for the original implementation
-            var originalMethod = new MethodDefinition(methodInfo.Name + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
-            foreach (var parameter in methodInfo.Parameters)
-            {
-                originalMethod.Parameters.Add(parameter);
-            }
-            originalMethod.Body = new MethodBody(originalMethod);
-            foreach (var variable in methodInfo.Body.Variables)
-            {
-                originalMethod.Body.Variables.Add(variable);
-            }
-            foreach (var instruction in methodInfo.Body.Instructions)
-            {
-                originalMethod.Body.GetILProcessor().Append(instruction);
-/*
-                // Check the source method for any usages of this.Invocation()
-                if (instruction.OpCode == OpCodes.Call)
-                {
-                    var methodReference = (MethodReference)instruction.Operand;
-                    if (methodReference.FullName == "SexyProxy.Invocation SexyProxy.ProxyExtensions::Invocation(SexyProxy.IProxy)")
-                    {
-                        // Insert reference to invocation
-                                    
-
-                        // Remove method call and the "this" argument
-                        methodInfo.Body.Instructions.RemoveAt(i);
-                        methodInfo.Body.Instructions.RemoveAt(i - 1);
-                    }
-                }
-#1#
-            }
-
-            // Now create a new method body
-            methodInfo.Body = new MethodBody(methodInfo);
-
-            base.ProxyMethod(methodInfo, methodInfo.Body, originalMethod);
-        }
-*/
 
         protected override TypeDefinition GetProxyType()
         {
