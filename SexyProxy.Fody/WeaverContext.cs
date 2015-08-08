@@ -30,5 +30,6 @@ namespace SexyProxy.Fody
         public TypeReference VoidInvocationType { get; set; }
         public TypeReference VoidAsyncInvocationType { get; set; }
         public MethodReference InvocationGetArguments { get; set; }
+        public TypeReference AsyncTaskMethodBuilder { get; set; }
     }
 }

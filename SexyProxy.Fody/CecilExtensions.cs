@@ -327,6 +327,55 @@ namespace SexyProxy.Fody
             }
         }
 
+        public static int IndexOf(this IList<Instruction> instructions, Func<Instruction, bool> predicate, int fromIndex = 0)
+        {
+            for (var i = fromIndex; i < instructions.Count; i++)
+            {
+                var instruction = instructions[i];
+                if (predicate(instruction))
+                    return i;
+            }
+            return -1;
+        }
+
+        public static Instruction Clone(this ILProcessor il, Instruction instruction)
+        {
+            if (instruction.Operand == null)
+                return il.Create(instruction.OpCode);
+            else if (instruction.Operand is TypeReference)
+                return il.Create(instruction.OpCode, (TypeReference)instruction.Operand);
+            else if (instruction.Operand is FieldReference)
+                return il.Create(instruction.OpCode, (FieldReference)instruction.Operand);
+            else if (instruction.Operand is MethodReference)
+                return il.Create(instruction.OpCode, (MethodReference)instruction.Operand);
+            else if (instruction.Operand is Instruction)
+                return il.Create(instruction.OpCode, (Instruction)instruction.Operand);
+            else if (instruction.Operand is CallSite)
+                return il.Create(instruction.OpCode, (CallSite)instruction.Operand);
+            else if (instruction.Operand is Instruction[])
+                return il.Create(instruction.OpCode, (Instruction[])instruction.Operand);
+            else if (instruction.Operand is ParameterDefinition)
+                return il.Create(instruction.OpCode, (ParameterDefinition)instruction.Operand);
+            else if (instruction.Operand is VariableDefinition)
+                return il.Create(instruction.OpCode, (VariableDefinition)instruction.Operand);
+            else if (instruction.Operand is byte)
+                return il.Create(instruction.OpCode, (byte)instruction.Operand);
+            else if (instruction.Operand is double)
+                return il.Create(instruction.OpCode, (double)instruction.Operand);
+            else if (instruction.Operand is float)
+                return il.Create(instruction.OpCode, (float)instruction.Operand);
+            else if (instruction.Operand is int)
+                return il.Create(instruction.OpCode, (int)instruction.Operand);
+            else if (instruction.Operand is long)
+                return il.Create(instruction.OpCode, (long)instruction.Operand);
+            else if (instruction.Operand is sbyte)
+                return il.Create(instruction.OpCode, (sbyte)instruction.Operand);
+            else if (instruction.Operand is string)
+                return il.Create(instruction.OpCode, (string)instruction.Operand);
+            else
+                throw new Exception("Unexpected operand type: " + instruction.Operand.GetType().FullName);
+        }
+
 
 /*
 

@@ -55,6 +55,7 @@ namespace SexyProxy.Fody
             var proxyGetInvocationHandlerMethod = ModuleDefinition.Import(proxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
             var invocationType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "Invocation", sexyProxy));
             var invocationGetArguments = ModuleDefinition.Import(invocationType.Resolve().Properties.Single(x => x.Name == "Arguments").GetMethod);
+            var asyncTaskMethodBuilder = ModuleDefinition.Import(typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder<>));
 
             var context = new WeaverContext
             {
@@ -82,7 +83,8 @@ namespace SexyProxy.Fody
                 InvocationType = invocationType,
                 VoidInvocationType = voidInvocationType,
                 VoidAsyncInvocationType = voidAsyncInvocationType,
-                InvocationGetArguments = invocationGetArguments
+                InvocationGetArguments = invocationGetArguments,
+                AsyncTaskMethodBuilder = asyncTaskMethodBuilder
             };
 
             foreach (var sourceType in targetTypes)

@@ -1,4 +1,6 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -43,7 +45,7 @@ namespace SexyProxy.Fody
 
                 // First declare the invocation in a private local variable
                 var invocation = new VariableDefinition(Context.InvocationType);
-                var instructions = methodInfo.Body.Instructions.ToArray();
+                var instructions = methodInfo.Body.Instructions.ToList();
                 methodInfo.Body.Instructions.Clear();
                 methodInfo.Body.Variables.Add(invocation);
                 EmitInvocation(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor);
@@ -56,25 +58,87 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldloc, invocation);                     // Element value
                 il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
 
-                // Now add all the instructions back, but transforming this.Invocation() if present
-                for (var i = 0; i < instructions.Length; i++)
+                // Special instrumentation for async methods
+                var returnType = methodInfo.ReturnType;
+                if (Context.TaskType.IsAssignableFrom(returnType))
                 {
-                    var instruction = instructions[i];
-                    var nextInstruction = i < instructions.Length - 1 ? instructions[i + 1] : null;
-                    if (nextInstruction != null && nextInstruction.OpCode == OpCodes.Call)
+                    // If the return type is Task<T>
+                    if (returnType.IsTaskT())
                     {
-                        var methodReference = (MethodReference)nextInstruction.Operand;
-                        if (methodReference.FullName == "SexyProxy.Invocation SexyProxy.ProxyExtensions::Invocation(SexyProxy.IProxy)")
+                        var actualReturnType = returnType.GetTaskType();
+                        var expectedAsyncBuilder = Context.AsyncTaskMethodBuilder.MakeGenericInstanceType(actualReturnType);
+
+                        // Now find the call to .Start() (only will be found if we're async)
+                        var startInstructionMethod = (GenericInstanceMethod)instructions
+                            .Where(x => x.OpCode == OpCodes.Call)
+                            .Select(x => (MethodReference)x.Operand)
+                            .Where(x => x.IsGenericInstance && x.Name == "Start" && x.DeclaringType.CompareTo(expectedAsyncBuilder))
+                            .SingleOrDefault();
+                        if (startInstructionMethod != null)
                         {
-                            // Insert reference to invocation
-                            il.Emit(OpCodes.Ldloc, invocation);
-                            i++;
-                            continue;
+                            var asyncType = startInstructionMethod.GenericArguments[0];
+                            var asyncConstructor = asyncType.Resolve().GetConstructors().Single();
+                            var invocationField = InstrumentAsyncType(asyncType);
+
+                            // Now find the instantiation of the asyncType
+                            var instantiateAsyncTypeIndex = instructions.IndexOf(x => x.OpCode == OpCodes.Newobj && x.Operand.Equals(asyncConstructor));
+                            if (instantiateAsyncTypeIndex == -1)
+                                throw new Exception($"Could not find expected instantiation of async type: {asyncType}");
+                            var nextSetFieldIndex = instructions.IndexOf(x => x.OpCode == OpCodes.Stfld);
+                            if (nextSetFieldIndex == -1)
+                                throw new Exception($"Could not find expected stfld of async type: {asyncType}");
+                            var setFieldLoadInstance = instructions[nextSetFieldIndex - 2];
+                            instructions.Insert(nextSetFieldIndex - 2, il.Clone(setFieldLoadInstance));
+                            instructions.Insert(nextSetFieldIndex - 1, il.Create(OpCodes.Ldloc, invocation));
+                            instructions.Insert(nextSetFieldIndex, il.Create(OpCodes.Stfld, invocationField));
                         }
                     }
-                    il.Append(instruction);
                 }
+
+                InstrumentInstructions(il, instructions, 2, x => x.Emit(OpCodes.Ldloc, invocation));
             }
+        }
+
+        private void InstrumentInstructions(ILProcessor il, IList<Instruction> instructions, int numberOfReplacedInstructions, Action<ILProcessor> loadInvocation)
+        {
+            var seekDepth = numberOfReplacedInstructions - 1;
+
+            // Now add all the instructions back, but transforming this.Invocation() if present
+            for (var i = 0; i < instructions.Count; i++)
+            {
+                var instruction = instructions[i];
+                var nextInstruction = i < instructions.Count - seekDepth ? instructions[i + seekDepth] : null;
+                if (nextInstruction != null && nextInstruction.OpCode == OpCodes.Call)
+                {
+                    var methodReference = (MethodReference)nextInstruction.Operand;
+                    if (methodReference.FullName == "SexyProxy.Invocation SexyProxy.ProxyExtensions::Invocation(SexyProxy.IProxy)")
+                    {
+                        // Insert reference to invocation
+                        loadInvocation(il);
+                        i += seekDepth;
+                        continue;
+                    }
+                }
+                il.Append(instruction);
+            }            
+        }
+
+        private FieldDefinition InstrumentAsyncType(TypeReference asyncType)
+        {
+            var asyncTypeDefinition = asyncType.Resolve();
+            var invocationField = new FieldDefinition("$invocation", FieldAttributes.Public, Context.InvocationType);
+            asyncTypeDefinition.Fields.Add(invocationField);
+
+            var moveNext = asyncTypeDefinition.Methods.Single(x => x.Name == "MoveNext");
+            var instructions = moveNext.Body.Instructions.ToList();
+            moveNext.Body.Instructions.Clear();
+            InstrumentInstructions(moveNext.Body.GetILProcessor(), instructions, 3, x =>
+            {
+                x.Emit(OpCodes.Ldarg_0);
+                x.Emit(OpCodes.Ldfld, invocationField);
+            });
+
+            return invocationField;
         }
 
         protected override void EmitInvocationArgumentsArray(MethodDefinition methodInfo, ILProcessor il, int size)
