@@ -34,6 +34,7 @@ namespace SexyProxy.Fody.Tests
         private interface ICrudApi<T> 
         {
             Task<T> Get(int id);
+            Task<T[]> GetAll();
         }
 
         class FooApi<T>

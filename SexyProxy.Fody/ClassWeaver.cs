@@ -87,7 +87,7 @@ namespace SexyProxy.Fody
                 {
                     var genericProxyType = ProxyType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
                     methodInfoField = methodInfoField.Bind(genericProxyType);
-                    methodDeclaringType = genericProxyType;
+                    methodDeclaringType = SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
                 }
                 il.StoreMethodInfo(methodInfoField, methodDeclaringType, methodInfo);
             });
