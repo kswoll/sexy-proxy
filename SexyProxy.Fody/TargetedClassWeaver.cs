@@ -1,32 +1,45 @@
 ﻿using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 
 namespace SexyProxy.Fody
 {
     public abstract class TargetedClassWeaver : ClassWeaver
     {
-        public FieldDefinition Target { get; private set; }
+        public FieldReference Target { get; private set; }
         public FieldDefinition InvocationHandler { get; private set; }
 
         protected TargetedClassWeaver(WeaverContext context, TypeDefinition sourceType) : base(context, sourceType)
         {
         }
 
-        protected virtual TypeReference BaseType => SourceType;
+        protected virtual TypeReference GetBaseType(GenericParameter[] genericParameters) => !SourceType.HasGenericParameters ? (TypeReference)SourceType : SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
 
-        protected virtual TypeReference[] GetInterfaces()
+        protected virtual TypeReference[] GetInterfaces(GenericParameter[] genericParameters)
         {
             return new TypeReference[0];
         }
+
+        protected virtual TypeReference GetSourceType() => GetBaseType(ProxyType.GenericParameters.ToArray());
 
         protected override TypeDefinition GetProxyType()
         {
             var visibility = SourceType.Attributes & (TypeAttributes.Public | TypeAttributes.NestedPrivate | 
                 TypeAttributes.NestedFamily | TypeAttributes.NestedAssembly | TypeAttributes.NestedPublic | 
                 TypeAttributes.NestedFamANDAssem | TypeAttributes.NestedFamORAssem);
-            var type = new TypeDefinition(SourceType.Namespace, SourceType.Name + "$Proxy", visibility, BaseType);
-            var intfs = GetInterfaces();
+            var type = new TypeDefinition(SourceType.Namespace, SourceType.Name.Replace('`', '$') + "$Proxy", visibility);
+            foreach (var parameter in SourceType.GenericParameters)
+            {
+                var newParameter = new GenericParameter("$" + parameter.Name, type);
+                foreach (var constraint in parameter.Constraints)
+                {
+                    newParameter.Constraints.Add(constraint);
+                }
+                type.GenericParameters.Add(newParameter);
+            }
+            type.BaseType = GetBaseType(type.GenericParameters.ToArray());
+            var intfs = GetInterfaces(type.GenericParameters.ToArray());
             foreach (var intf in intfs)
                 type.Interfaces.Add(intf);
             return type;
@@ -36,9 +49,14 @@ namespace SexyProxy.Fody
         {
             base.InitializeProxyType();
 
-            // Create target field
-            Target = new FieldDefinition("$target", FieldAttributes.Private, SourceType);
-            ProxyType.Fields.Add(Target);
+            var targetDefinition = new FieldDefinition("$target", FieldAttributes.Private, GetSourceType());
+            ProxyType.Fields.Add(targetDefinition);
+            Target = targetDefinition;
+
+//            if (ProxyType.HasGenericParameters)
+//            {
+//                Target = Target.Bind((GenericInstanceType)GetSourceType());
+//            }
 
             // Create invocationHandler field
             InvocationHandler = new FieldDefinition("$invocationHandler", FieldAttributes.Private, Context.InvocationHandlerType);
@@ -68,7 +86,7 @@ namespace SexyProxy.Fody
         {
             // Create constructor 
             var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Context.ModuleDefinition.TypeSystem.Void);
-            constructorWithTarget.Parameters.Add(new ParameterDefinition(SourceType));
+            constructorWithTarget.Parameters.Add(new ParameterDefinition(GetSourceType()));
             constructorWithTarget.Parameters.Add(new ParameterDefinition(Context.InvocationHandlerType));
             ProxyType.Methods.Add(constructorWithTarget);
             constructorWithTarget.Body = new MethodBody(constructorWithTarget);
@@ -110,21 +128,20 @@ namespace SexyProxy.Fody
             }
             else
             {
-                Context.LogInfo($"Adding proxy as a nested type to: " + SourceType.DeclaringType);
                 SourceType.DeclaringType.NestedTypes.Add(ProxyType);
             }
         }
 
         protected abstract MethodAttributes GetMethodAttributes(MethodDefinition methodInfo);
 
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
         {
 //                    var isImplemented = !isIntf && methodInfo.IsFinal;
             MethodAttributes methodAttributes = GetMethodAttributes(methodInfo);
 
             // Define the actual method
             var parameterInfos = methodInfo.Parameters;
-            var method = new MethodDefinition(methodInfo.Name, methodAttributes, methodInfo.ReturnType);
+            var method = new MethodDefinition(methodInfo.Name, methodAttributes, methodInfo.ReturnType.ResolveGenericParameter(ProxyType));
             foreach (var parameterType in parameterInfos.Select(x => x.ParameterType).ToArray())
                 method.Parameters.Add(new ParameterDefinition(parameterType));
             ProxyType.Methods.Add(method);

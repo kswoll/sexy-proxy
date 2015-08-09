@@ -29,9 +29,7 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ldarg_0);
         }
 
-        protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField, 
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
-            MethodReference invocationConstructor, MethodReference invokeMethod)
+        protected override void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod)
         {
             // If it's abstract, then the method is entirely implemented by the InvocationHandler
             if (methodInfo.IsAbstract)
@@ -146,9 +144,7 @@ namespace SexyProxy.Fody
             base.EmitInvocationArgumentsArray(methodInfo, il, size + 1);
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
-            MethodReference invocationConstructor, MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)
         {
             if (methodInfo.IsAbstract)
             {
@@ -174,7 +170,7 @@ namespace SexyProxy.Fody
             }
         }
 
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
+        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
         {
             if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
                 return;

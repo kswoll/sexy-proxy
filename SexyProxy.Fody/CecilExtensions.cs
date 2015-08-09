@@ -118,6 +118,12 @@ namespace SexyProxy.Fody
             return typeIsDefined;
         }
 
+        public static FieldReference Bind(this FieldReference field, GenericInstanceType genericType)
+        {
+            var reference = new FieldReference(field.Name, field.FieldType, genericType);
+            return reference;            
+        }
+
         public static MethodReference Bind(this MethodReference method, GenericInstanceType genericType)
         {
             var reference = new MethodReference(method.Name, method.ReturnType, genericType);
@@ -196,12 +202,13 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
         }
 
-        public static void StoreMethodInfo(this ILProcessor il, FieldDefinition staticField, MethodDefinition method)
+        public static void StoreMethodInfo(this ILProcessor il, FieldReference staticField, TypeReference declaringType, MethodDefinition method)
         {
             var parameterTypes = method.Parameters.Select(info => info.ParameterType).ToArray();
 
             // The type we want to invoke GetMethod upon
-            il.LoadType(method.DeclaringType);
+            LogInfo($"{declaringType}");
+            il.LoadType(declaringType);
 
             // Arg1: methodName
             il.Emit(OpCodes.Ldstr, method.Name);
@@ -267,6 +274,16 @@ namespace SexyProxy.Fody
             throw new Exception("Type " + type.FullName + " is not an instance of Task<T>");
         }
 
+        public static TypeReference ResolveGenericParameter(this TypeReference genericParameter, TypeDefinition typeContext)
+        {
+            if (!genericParameter.IsGenericParameter)
+                return genericParameter;
+
+            var name = genericParameter.Name;
+            var localParameter = typeContext.GenericParameters.SingleOrDefault(x => x.Name == name);
+            return localParameter ?? genericParameter;
+        }
+
         public static void CreateDefaultMethodImplementation(MethodDefinition methodInfo, ILProcessor il)
         {
             if (taskType.IsAssignableFrom(methodInfo.ReturnType))
@@ -274,7 +291,9 @@ namespace SexyProxy.Fody
                 if (methodInfo.ReturnType.IsTaskT())
                 {
                     var returnTaskType = methodInfo.ReturnType.GetTaskType();
-                    il.EmitDefaultValue(returnTaskType.Resolve());
+//                    if (returnTaskType.IsGenericParameter)
+
+                    il.EmitDefaultValue(returnTaskType);
                     var fromResult = taskFromResult.MakeGenericMethod(returnTaskType);
                     il.Emit(OpCodes.Call, fromResult);
                 }
@@ -294,7 +313,7 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ret);
         }
 
-        public static void EmitDefaultValue(this ILProcessor il, TypeDefinition type)
+        public static void EmitDefaultValue(this ILProcessor il, TypeReference type)
         {
             if (type.CompareTo(ModuleDefinition.TypeSystem.Boolean) || type.CompareTo(ModuleDefinition.TypeSystem.Byte) ||
                 type.CompareTo(ModuleDefinition.TypeSystem.Int16) || type.CompareTo(ModuleDefinition.TypeSystem.Int32))
@@ -313,7 +332,7 @@ namespace SexyProxy.Fody
             {
                 il.Emit(OpCodes.Conv_R8);
             }
-            else if (type.IsValueType)
+            else if (type.IsGenericParameter || type.IsValueType)
             {
                 var local = new VariableDefinition(type);
                 il.Body.Variables.Add(local);

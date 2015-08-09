@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -59,7 +58,12 @@ namespace SexyProxy.Fody
                 if (methodInfo.IsConstructor)
                     continue;
 
-                ProxyMethod(methodInfo, methodInfo.Body, methodInfo);
+                MethodReference proceedMethodTarget = methodInfo;
+                if (SourceType.HasGenericParameters)
+                    proceedMethodTarget = methodInfo.Bind(SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray()));
+
+                Context.LogInfo($"{proceedMethodTarget}");
+                ProxyMethod(methodInfo, methodInfo.Body, proceedMethodTarget);
             }
 
             StaticConstructor.Body.Emit(il =>
@@ -70,14 +74,22 @@ namespace SexyProxy.Fody
             Finish();
         }
 
-        protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodDefinition proceedTargetMethod)
+        protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
         {
             // Initialize method info in static constructor
-            var methodInfoField = new FieldDefinition(methodInfo.Name + "__Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
-            ProxyType.Fields.Add(methodInfoField);
+            var methodInfoFieldDefinition = new FieldDefinition(methodInfo.Name + "__Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
+            ProxyType.Fields.Add(methodInfoFieldDefinition);
+            FieldReference methodInfoField = methodInfoFieldDefinition;
             StaticConstructor.Body.Emit(il =>
             {
-                il.StoreMethodInfo(methodInfoField, methodInfo);
+                TypeReference methodDeclaringType = methodInfo.DeclaringType;
+                if (ProxyType.HasGenericParameters)
+                {
+                    var genericProxyType = ProxyType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
+                    methodInfoField = methodInfoField.Bind(genericProxyType);
+                    methodDeclaringType = genericProxyType;
+                }
+                il.StoreMethodInfo(methodInfoField, methodDeclaringType, methodInfo);
             });
 
             // Create proceed method (four different types).  The proceed method is what you may call in your invocation handler
@@ -143,28 +155,31 @@ namespace SexyProxy.Fody
                 }
             }
 
-            var proceed = new MethodDefinition(methodInfo.Name + "$Proceed", MethodAttributes.Private, proceedReturnType);
+            var proceed = new MethodDefinition(methodInfo.Name + "$Proceed", MethodAttributes.Private, proceedReturnType.ResolveGenericParameter(ProxyType));
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
             proceed.Body = new MethodBody(proceed);
+            proceed.Body.InitLocals = true;
             ProxyType.Methods.Add(proceed);
+
+            MethodReference proceedReference = proceed;
+            if (ProxyType.HasGenericParameters) 
+                proceedReference = proceed.Bind(ProxyType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray()));
 
             proceed.Body.Emit(il =>
             {
-                ImplementProceed(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, 
+                ImplementProceed(methodInfo, body, il, methodInfoField, proceedReference, proceedDelegateTypeConstructor, invocationType, invocationConstructor, 
                     invokeMethod, proceedTargetMethod);
             });
 
             // Implement method
             body.Emit(il =>
             {
-                ImplementBody(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
+                ImplementBody(methodInfo, il, methodInfoField, proceedReference, proceedDelegateTypeConstructor, 
                     invocationType, invocationConstructor, invokeMethod);
             });
         }
 
-        protected virtual void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
-            MethodReference invocationConstructor, MethodReference invokeMethod)
+        protected virtual void ImplementBody(MethodDefinition methodInfo, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod)
         {
             EmitCallToInvocationHandler(methodInfo, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
                 invocationType, invocationConstructor, invokeMethod);
@@ -173,9 +188,7 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ret);            
         }
             
-        protected void EmitCallToInvocationHandler(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
-            MethodReference invocationConstructor, MethodReference invokeMethod)
+        protected void EmitCallToInvocationHandler(MethodDefinition methodInfo, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod)
         {
             // Load handler (consumed by call to invokeMethod near the end)
             EmitInvocationHandler(il);
@@ -187,8 +200,8 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Callvirt, invokeMethod);
         }
 
-        protected void EmitInvocation(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
+        protected void EmitInvocation(MethodDefinition methodInfo, ILProcessor il, FieldReference methodInfoField,
+            MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
             MethodReference invocationConstructor)
         {
             // Load method info
@@ -218,16 +231,14 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldc_I4, i);                         // Array index
                 il.Emit(OpCodes.Ldarg, (short)(i + 1));             // Element value
 
-                if (parameterInfos[i].ParameterType.IsValueType)
+                if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)
                     il.Emit(OpCodes.Box, Context.ModuleDefinition.Import(parameterInfos[i].ParameterType));
 
                 il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
             }            
         }
 
-        protected virtual void ImplementProceed(MethodDefinition methodInfo, ILProcessor il, FieldDefinition methodInfoField,
-            MethodDefinition proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, 
-            MethodReference invocationConstructor, MethodReference invokeMethod, MethodDefinition proceedTargetMethod)
+        protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)
         {
             var parameterInfos = methodInfo.Parameters;
 
@@ -240,7 +251,7 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldarg, 1);                                                   // Push array 
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element
-                if (parameterInfos[i].ParameterType.IsValueType)                             // If it's a value type, unbox it
+                if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
                     il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType);
                 else                                                                         // Otherwise, cast it
                     il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);

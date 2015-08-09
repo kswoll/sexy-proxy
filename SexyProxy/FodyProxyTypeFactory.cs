@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
 
 namespace SexyProxy
@@ -7,7 +8,12 @@ namespace SexyProxy
     {
         public Type CreateProxyType(Type sourceType)
         {
-            return sourceType.Assembly.GetType(sourceType.FullName + "$Proxy");
+            var proxyType = sourceType.Assembly.GetType(sourceType.FullName.Split('[').First().Replace('`', '$') + "$Proxy");
+            if (proxyType.ContainsGenericParameters)
+            {
+                proxyType = proxyType.MakeGenericType(sourceType.GetGenericArguments());
+            }
+            return proxyType;
         }
     }
 }
