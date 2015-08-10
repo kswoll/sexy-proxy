@@ -3,7 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace SexyProxy.Fody.Tests
+namespace SexyProxy.Emit.Tests
 {
     [TestFixture]
     public class GenericsTests 
@@ -23,29 +23,14 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("Doe", user.LastName);
         }
 
-        [Test]
-        public async void GetAll()
-        {
-            var proxy = Proxy.CreateProxy<ICrudApi<User>>(async invocation =>
-            {
-                await invocation.Proceed();
-                return new[] { new User { Id = 1, FirstName = "John", LastName = "Doe" } };
-            });
-            var users = await proxy.GetAll();
-            Assert.AreEqual(1, users[0].Id);
-            Assert.AreEqual("John", users[0].FirstName);
-            Assert.AreEqual("Doe", users[0].LastName);
-        }
-
-        private class User
+        public class User
         {
             public int Id { get; set; }
             public string FirstName { get; set; }
             public string LastName { get; set; }
         }
 
-        [Proxy]
-        private interface ICrudApi<T> 
+        public interface ICrudApi<T> 
         {
             Task<T> Get(int id);
             Task<T[]> GetAll();

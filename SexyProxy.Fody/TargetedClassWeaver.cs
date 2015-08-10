@@ -53,11 +53,6 @@ namespace SexyProxy.Fody
             ProxyType.Fields.Add(targetDefinition);
             Target = targetDefinition;
 
-//            if (ProxyType.HasGenericParameters)
-//            {
-//                Target = Target.Bind((GenericInstanceType)GetSourceType());
-//            }
-
             // Create invocationHandler field
             InvocationHandler = new FieldDefinition("$invocationHandler", FieldAttributes.Private, Context.InvocationHandlerType);
             ProxyType.Fields.Add(InvocationHandler);

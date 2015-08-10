@@ -17,19 +17,23 @@ namespace SexyProxy.Emit
 
         public Type CreateProxyType(Type sourceType)
         {
-            string assemblyName = sourceType.FullName + "__Proxy";
+            string assemblyName = sourceType.Namespace + "." + sourceType.Name.Replace('`', '$') + "$Proxy";
 
             bool isIntf = sourceType.IsInterface;
             var assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
             var module = assembly.DefineDynamicModule(assemblyName);
 
-            var baseType = isIntf ? typeof(object) : sourceType;
-            var intfs = isIntf ? new[] { sourceType } : Type.EmptyTypes;
-
-            var type = module.DefineType(assemblyName, TypeAttributes.Public, baseType, intfs);
+            var type = module.DefineType(assemblyName, TypeAttributes.Public);
+            var genericParameters = type.DefineGenericParameters(sourceType.GenericTypeArguments.Select(x => x.Name).ToArray());
+            var targetType = sourceType.ContainsGenericParameters ? sourceType.MakeGenericType(genericParameters) : sourceType;
+            var baseType = isIntf ? typeof(object) : targetType;
+            var intfs = isIntf ? new[] { targetType } : Type.EmptyTypes;
+            type.SetParent(baseType);
+            foreach (var intf in intfs)
+                type.AddInterfaceImplementation(intf);
 
             // Create target field
-            var target = type.DefineField("__target", sourceType, FieldAttributes.Private);
+            var target = type.DefineField("__target", targetType, FieldAttributes.Private);
             var invocationHandler = type.DefineField("__invocationHandler", typeof(InvocationHandler), FieldAttributes.Private);
 
             // Create constructor 
@@ -179,7 +183,7 @@ namespace SexyProxy.Emit
                         proceedIl.Emit(OpCodes.Ldarg, (short)1);            // Push array 
                         proceedIl.Emit(OpCodes.Ldc_I4, i);                  // Push element index
                         proceedIl.Emit(OpCodes.Ldelem, typeof(object));     // Get element
-                        if (parameterInfos[i].ParameterType.IsValueType)
+                        if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)
                             proceedIl.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType);
                     }
 
@@ -216,6 +220,8 @@ namespace SexyProxy.Emit
                     il.Emit(OpCodes.Stelem, typeof(object));            // Set array at index to element value
                 }
 
+//                var proceedTarget = targetType.GetMethods().Single(targetMethod => targetMethod.Name == proceed.Name && targetMethod.GetParameters().Zip(proceed.GetParameters(), (x, y) => new { x, y }).All(x => x.x.ParameterType.Equals(x.y.ParameterType)));
+                
                 // Load function pointer to proceed method
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldftn, proceed);
@@ -234,6 +240,7 @@ namespace SexyProxy.Emit
             staticIl.Emit(OpCodes.Ret);
 
             var proxyType = type.CreateType();
+
             return proxyType;            
         }
     }

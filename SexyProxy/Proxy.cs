@@ -147,7 +147,14 @@ namespace SexyProxy
             else if (Attribute.IsDefined(typeof(T), typeof(ProxyAttribute)))
                 return new FodyProxyTypeFactory().CreateProxyType(typeof(T));
             else
-                return new EmitProxyTypeFactory().CreateProxyType(typeof(T));
+            {
+                var result = new EmitProxyTypeFactory().CreateProxyType(typeof(T));
+                if (result.ContainsGenericParameters)
+                {
+                    result = result.MakeGenericType(typeof(T).GetGenericArguments());
+                }
+                return result;
+            }
         }
     }
 }

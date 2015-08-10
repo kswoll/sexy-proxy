@@ -45,6 +45,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractMethodTests.cs" />
+    <Compile Include="GenericsTests.cs" />
     <Compile Include="HandWritten.cs" />
     <Compile Include="HandWrittenBaseNoTargetDynamicProxyTests.cs" />
     <Compile Include="HandWrittenBaseWithDynamicProxyTests.cs" />

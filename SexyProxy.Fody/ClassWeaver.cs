@@ -216,7 +216,6 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Newobj, proceedDelegateTypeConstructor);
 
             // Instantiate Invocation
-//            il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Newobj, invocationConstructor);
         }
 
