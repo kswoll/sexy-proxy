@@ -18,6 +18,7 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("Test", s);
         }
 
+        [Proxy]
         public abstract class BaseClass
         {
             public abstract Task<string> GetAbstractHelloWorld();

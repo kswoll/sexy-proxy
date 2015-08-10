@@ -24,8 +24,12 @@ namespace SexyProxy.Emit
             var module = assembly.DefineDynamicModule(assemblyName);
 
             var type = module.DefineType(assemblyName, TypeAttributes.Public);
-            var genericParameters = type.DefineGenericParameters(sourceType.GenericTypeArguments.Select(x => x.Name).ToArray());
-            var targetType = sourceType.ContainsGenericParameters ? sourceType.MakeGenericType(genericParameters) : sourceType;
+            var targetType = sourceType;
+            if (sourceType.ContainsGenericParameters)
+            {
+                var genericParameters = type.DefineGenericParameters(sourceType.GenericTypeArguments.Select(x => x.Name).ToArray());
+                targetType = sourceType.MakeGenericType(genericParameters);
+            }
             var baseType = isIntf ? typeof(object) : targetType;
             var intfs = isIntf ? new[] { targetType } : Type.EmptyTypes;
             type.SetParent(baseType);

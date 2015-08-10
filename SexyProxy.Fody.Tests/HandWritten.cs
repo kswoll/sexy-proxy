@@ -2,6 +2,7 @@
 
 namespace SexyProxy.Fody.Tests
 {
+    [Proxy]
     public class HandWritten : IHandWritten
     {
         public const string GetStringAsyncReturnValue = "Some async string";
