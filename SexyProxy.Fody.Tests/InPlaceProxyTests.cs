@@ -98,5 +98,30 @@ namespace SexyProxy.Fody.Tests
                 return result + result;
             }
         }
+
+        [Test]
+        public void PrivateMethod()
+        {
+            var proxy = Proxy.CreateProxy<ClassWithPrivateMethod>(x => Task.FromResult<object>("foo"));
+            var result = proxy.PublicMethod("foo");
+            Assert.AreEqual("foofoo", result);                        
+        }
+
+        // ReSharper disable once ClassNeverInstantiated.Local
+        private class ClassWithPrivateMethod : IProxy, ISetInvocationHandler
+        {
+            public InvocationHandler InvocationHandler { get; set; }
+
+            private string PrivateMethod(string s)
+            {
+                var result = (string)this.Invocation().Proceed().Result;
+                return result + result;
+            }
+
+            public string PublicMethod(string s)
+            {
+                return PrivateMethod(s);
+            }
+        }
     }
 }
