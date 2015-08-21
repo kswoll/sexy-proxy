@@ -85,7 +85,7 @@ writer as we expected.
 However, it has two key limitations:
 
 * It requires `Reflection.Emit` -- this is a problem for iOS apps.
-* It requires that proxied methods be virtual or that the proxy type be an interface.
+* It requires that proxy'd methods be virtual or that the proxy type be an interface.
 * Any costs associated with generating a proxy (admitedly fairly minimal) are incurrred
 at runtime rather than compile time.
 
@@ -100,3 +100,7 @@ your iterations when leveraging TDD.
 * On your proxy'd type you must either:
     * Decorate it with the `[Proxy]` attribute
     * Implement the interface `IProxy`
+    
+Generally speaking, we'd recommend using the Fody implementation since the costs are 
+negligible and the benefits are useful. (you can proxy on any method, regardless of 
+whether it's marked as `virtual`)
