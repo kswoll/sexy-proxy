@@ -5,7 +5,7 @@ class or interface and inject an interceptor that can generically handle each
 method in the source type and choose when and whether to pass the invocation off
 to the original implementation (if any).  The idea is similar to [Castle's 
 DynamicProxy](http://www.castleproject.org/projects/dynamicproxy/) but in 
-contrast to that library, sexy-proxy is fully async/await enabled.  By that, we 
+contrast to that library, *sexy-proxy* is fully async/await enabled.  By that, we 
 mean the methods around which you are proxying can return `Task` or `Task<T>` 
 and your *interceptor* itself can use `async` and `await` without having to 
 fuss with awkward uses of `.ContinueWith`.
@@ -79,3 +79,24 @@ writer as we expected.
 
 
 ## Overview
+
+*sexy-proxy* provides two key ways of generating the proxy.  One uses 
+`Reflection.Emit` and is simple and works out of the box.  (it has no dependencies)
+However, it has two key limitations:
+
+* It requires `Reflection.Emit` -- this is a problem for iOS apps.
+* It requires that proxied methods be virtual or that the proxy type be an interface.
+* Any costs associated with generating a proxy (admitedly fairly minimal) are incurrred
+at runtime rather than compile time.
+
+If any of these concerns are paramount, *sexy-proxy* provides an alternative generator
+that uses [Fody](https://github.com/Fody/Fody). This is a tool that allows the proxies
+to be generated at compile-time.  This addresses all the aforementioned issues. The 
+downsides of using Fody are minimal:
+
+* The generation happens at compile-time, so any penalty incurred for generating proxies
+must be dealt with every time you compile. So, for example, it can (slightly) slow down 
+your iterations when leveraging TDD.
+* On your proxy'd type you must either:
+    * Decorate it with the `[Proxy]` attribute
+    * Implement the interface `IProxy`
