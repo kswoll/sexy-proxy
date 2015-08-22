@@ -96,7 +96,8 @@ advantage of this library.
 However, it has two key limitations:
 
 * It requires `Reflection.Emit` -- this is a problem for iOS apps.
-* It requires that proxy'd methods be virtual or that the proxy type be an interface.
+* It requires that proxy'd methods be virtual or that the proxy type be an interface (and
+that the type be public).
 
 Furthermore, any costs associated with generating a proxy (admitedly fairly minimal) are incurrred
 at runtime rather than compile time.
@@ -139,11 +140,12 @@ handler can also be an async method (or lambda) this is straightforward.
 * It takes no arguments.  This is because the invocation handler is the same for all
 the methods you may be intercepting, which could have wildly different arity.  
     
-Thus, the *arguments* to your intercepted method `Arguments` property:
+Thus, the *arguments* to your intercepted method are contained in the  `Arguments` 
+property:
 
     public object[] Arguments { get; set; }
     
-Naturally, if youre method has three parameters, then this array will contain three 
+Naturally, if your method has three parameters, then this array will contain three 
 elements in parameter order.  Importantly, you may *modify* this array to dynamically
 change the arguments that will be passed on to the original implementation if and when
 you invoke `Proceed`.
@@ -152,7 +154,21 @@ you invoke `Proceed`.
 ### Proxies around unimplemented methods vs. those with existing behavior.
 
 As in the example illustrated in **Getting Started**, you can intercept methods that 
-already have existing behavior.  If using the `Reflection.Emit` generator, this requires
-that the methods be virtual, which implies that their visibility must be either 
-protected or public.  If using the Fody generator, there are no limitationns on the 
-nature of the methods that may be intercepted.
+already have existing behavior.  If doing so, `Proceed` will allow you to invoke that
+behavior.  In contrast, if the intercepted method is abstract or declared in an 
+interface, then `Proceed` will do nothing but return the default value for the return 
+type, or null if the return type is `void`.
+
+### Target-based proxies
+
+Sometimes you already have an existing instance of your proxy type and you want to 
+modify the behavior via the 
+[decorator pattern](https://en.wikipedia.org/wiki/Decorator_pattern).  Normally the 
+decorator pattern requires you to manually override/implement the relevant methods, 
+which of course is often exactly the right approach.  
+
+Other times, however, the behavior you want to apply can be generalized such that you'd
+rather not have to override each method individually. (for example, logging how long it 
+took to invoke each method)  In such a scenario, you can use *sexy-proxy* to create a 
+proxy where the `Proceed` method will actually invoke the method on an arbitrary 
+instance of the type that you provide when instantiating your proxy.
