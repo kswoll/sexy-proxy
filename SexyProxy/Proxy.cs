@@ -1,6 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
+
+#if EMIT
 using SexyProxy.Emit;
+#endif
 
 namespace SexyProxy
 {
@@ -143,7 +146,8 @@ namespace SexyProxy
         private static Type CreateProxyType()
         {
             if (isInPlace)
-                return typeof(T);
+                return typeof(T);            
+#if EMIT
             else if (Attribute.IsDefined(typeof(T), typeof(ProxyAttribute)))
                 return new FodyProxyTypeFactory().CreateProxyType(typeof(T));
             else
@@ -155,6 +159,10 @@ namespace SexyProxy
                 }
                 return result;
             }
+#else
+            else
+                throw new Exception("Emit generator is not available, so you must use Fody");
+#endif
         }
     }
 }
