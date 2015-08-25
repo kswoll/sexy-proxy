@@ -226,11 +226,13 @@ namespace SexyProxy.Fody
             // Arg4: parameterTypes
             il.Emit(OpCodes.Ldc_I4, parameterTypes.Length);
             il.Emit(OpCodes.Newarr, typeType);
+
             // Copy array for each element we are going to set
             for (int i = 0; i < parameterTypes.Length; i++)
             {
                 il.Emit(OpCodes.Dup);
             }
+
             // Set each element 
             for (int i = 0; i < parameterTypes.Length; i++)
             {

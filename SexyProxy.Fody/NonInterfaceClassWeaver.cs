@@ -32,7 +32,8 @@ namespace SexyProxy.Fody
 
         protected override OpCode GetProceedCallOpCode(MethodDefinition methodInfo)
         {
-            return methodInfo.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
+            return OpCodes.Call;
+//            return methodInfo.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
         }
 
         protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)

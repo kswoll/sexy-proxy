@@ -30,6 +30,7 @@ namespace SexyProxy.Fody
 
         protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
         {
+//            Debugger.Launch();
             if (methodInfo.ReturnType.CompareTo(Context.InvocationHandlerType) && methodInfo.Name == "get_InvocationHandler") 
                 return;
 
