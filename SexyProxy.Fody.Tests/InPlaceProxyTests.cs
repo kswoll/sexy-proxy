@@ -157,6 +157,28 @@ namespace SexyProxy.Fody.Tests
             {
                 return PrivateMethod(s);
             }
-        }         
+        }
+
+        [Test]
+        public void Overloads()
+        {
+            var proxy = Proxy.CreateProxy<ClassWithOverloads>(x => Task.FromResult<object>("foo"));
+            var result = proxy.Method("foo");
+            Assert.AreEqual("foofoo", result);                        
+        }
+
+        [Proxy]
+        private class ClassWithOverloads 
+        {
+            public string Method()
+            {
+                return "foo";
+            }
+
+            public string Method(string s)
+            {
+                return s + "foo";
+            }
+        }     
     }
 }
