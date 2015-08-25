@@ -87,7 +87,7 @@ namespace SexyProxy.Fody
             constructorWithTarget.Body = new MethodBody(constructorWithTarget);
             constructorWithTarget.Body.Emit(il =>
             {
-                il.EmitDefaultBaseConstructorCall(SourceType);
+                il.EmitDefaultBaseConstructorCall(ProxyType);
                 il.Emit(OpCodes.Ldarg_0);  // Put "this" on the stack for the subsequent stfld instruction way below
 
                 PrepareTargetForConstructor(il);

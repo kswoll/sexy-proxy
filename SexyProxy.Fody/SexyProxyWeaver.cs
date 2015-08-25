@@ -31,9 +31,10 @@ namespace SexyProxy.Fody
             var proxyAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyAttribute", sexyProxy);
             if (proxyAttribute == null)
                 throw new Exception($"{nameof(proxyAttribute)} is null");
+            var reverseProxyInterface = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "IReverseProxy", sexyProxy));
             var proxyInterface = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy));
 
-            var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || proxyInterface.IsAssignableFrom(x)).ToArray();
+            var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || reverseProxyInterface.IsAssignableFrom(x) || proxyInterface.IsAssignableFrom(x)).ToArray();
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
 
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));
@@ -53,6 +54,7 @@ namespace SexyProxy.Fody
             var asyncInvokeTMethod = ModuleDefinition.Import(invocationHandlerType.Resolve().Methods.Single(x => x.Name == "AsyncInvokeT"));
             var objectType = ModuleDefinition.Import(typeof(object));
             var proxyGetInvocationHandlerMethod = ModuleDefinition.Import(proxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
+            var reverseProxyGetInvocationHandlerMethod = ModuleDefinition.Import(reverseProxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
             var invocationType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "Invocation", sexyProxy));
             var invocationGetArguments = ModuleDefinition.Import(invocationType.Resolve().Properties.Single(x => x.Name == "Arguments").GetMethod);
             var asyncTaskMethodBuilder = ModuleDefinition.Import(typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder<>));
@@ -80,6 +82,7 @@ namespace SexyProxy.Fody
                 VoidInvocationConstructor = voidInvocationConstructor,
                 VoidInvokeMethod = voidInvokeMethod,
                 ProxyGetInvocationHandlerMethod = proxyGetInvocationHandlerMethod,
+                ReverseProxyGetInvocationHandlerMethod = reverseProxyGetInvocationHandlerMethod,
                 InvocationType = invocationType,
                 VoidInvocationType = voidInvocationType,
                 VoidAsyncInvocationType = voidAsyncInvocationType,
@@ -96,6 +99,8 @@ namespace SexyProxy.Fody
                     classWeaver = new InterfaceClassWeaver(context, sourceType);
                 else if (proxyInterface.IsAssignableFrom(sourceType))
                     classWeaver = new InPlaceClassWeaver(context, sourceType);
+                else if (reverseProxyInterface.IsAssignableFrom(sourceType))
+                    classWeaver = new ReverseProxyClassWeaver(context, sourceType);
                 else
                     classWeaver = new NonInterfaceClassWeaver(context, sourceType);
 

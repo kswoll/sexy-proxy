@@ -32,7 +32,7 @@ namespace SexyProxy.Fody
             return MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual;
         }
 
-        protected override OpCode GetProceedCallOpCode()
+        protected override OpCode GetProceedCallOpCode(MethodDefinition methodInfo)
         {
             return OpCodes.Callvirt;
         }

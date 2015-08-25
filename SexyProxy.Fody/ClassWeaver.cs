@@ -10,7 +10,7 @@ namespace SexyProxy.Fody
     {
         protected abstract TypeDefinition GetProxyType();
         protected abstract MethodDefinition GetStaticConstructor();
-        protected abstract OpCode GetProceedCallOpCode();
+        protected abstract OpCode GetProceedCallOpCode(MethodDefinition methodInfo);
         protected abstract void EmitInvocationHandler(ILProcessor il);
         protected abstract void EmitProceedTarget(ILProcessor il);
 
@@ -58,9 +58,7 @@ namespace SexyProxy.Fody
                 if (methodInfo.IsConstructor)
                     continue;
 
-                MethodReference proceedMethodTarget = methodInfo;
-                if (SourceType.HasGenericParameters)
-                    proceedMethodTarget = methodInfo.Bind(SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray()));
+                var proceedMethodTarget = GetProceedMethodTarget(methodInfo);
 
                 Context.LogInfo($"{proceedMethodTarget}");
                 ProxyMethod(methodInfo, methodInfo.Body, proceedMethodTarget);
@@ -72,6 +70,14 @@ namespace SexyProxy.Fody
             });
 
             Finish();
+        }
+
+        protected virtual MethodReference GetProceedMethodTarget(MethodDefinition methodInfo)
+        {
+            MethodReference result = methodInfo;
+            if (SourceType.HasGenericParameters)
+                result = methodInfo.Bind(SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray()));
+            return result;
         }
 
         protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
@@ -256,7 +262,7 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
             }
 
-            il.Emit(GetProceedCallOpCode(), proceedTargetMethod);
+            il.Emit(GetProceedCallOpCode(proceedTargetMethod.Resolve()), proceedTargetMethod);
             il.Emit(OpCodes.Ret);                    
         }
     }

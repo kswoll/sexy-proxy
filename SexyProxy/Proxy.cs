@@ -121,7 +121,7 @@ namespace SexyProxy
 
     public static class Proxy<T>
     {
-        private static bool isInPlace = typeof(IProxy).IsAssignableFrom(typeof(T));
+        private static bool isInPlace = typeof(IReverseProxy).IsAssignableFrom(typeof(T));
         private static bool isSetInvocationHandler = isInPlace && typeof(ISetInvocationHandler).IsAssignableFrom(typeof(T));
         private static Type proxyType = CreateProxyType();
 

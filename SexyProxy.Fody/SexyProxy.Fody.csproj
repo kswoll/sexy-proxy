@@ -61,6 +61,7 @@
     <Compile Include="ClassWeaver.cs" />
     <Compile Include="CecilExtensions.cs" />
     <Compile Include="InPlaceClassWeaver.cs" />
+    <Compile Include="ReverseProxyClassWeaver.cs" />
     <Compile Include="InterfaceClassWeaver.cs" />
     <Compile Include="ModuleWeaver.cs" />
     <Compile Include="NonInterfaceClassWeaver.cs" />

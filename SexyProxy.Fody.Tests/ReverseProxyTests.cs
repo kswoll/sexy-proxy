@@ -1,40 +1,12 @@
 ﻿using System;
-using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SexyProxy.Fody.Tests
 {
     [TestFixture]
-    public class InPlaceProxyTests
+    public class ReverseProxyTests
     {
-/*
-        [Test]
-        public void GenericMethod()
-        {
-            var proxy = new GenericMethods(new InvocationHandler(async invocation =>
-            {
-                return int.Parse(invocation.Arguments.Single().ToString());
-            }));
-            proxy.Foo(5);
-        }
-
-        private class GenericMethods : IProxy
-        {
-            public InvocationHandler InvocationHandler { get; }
-
-            public GenericMethods(InvocationHandler invocationHandler)
-            {
-                InvocationHandler = invocationHandler;
-            }
-
-            public T Foo<T>(T value)
-            {
-                return default(T);
-            }
-        }
-
-*/
         [Test]
         public void NoChangeReturnsFoo()
         {
@@ -44,11 +16,11 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public void AlterReturns2()
+        public void AlterReturns22()
         {
             var proxy = new TestClass(x => Task.FromResult<object>(x.Arguments[0].ToString()));
             var result = proxy.Alter(2);
-            Assert.AreEqual("2", result);            
+            Assert.AreEqual("22", result);            
         }
 
         [Test]
@@ -59,15 +31,7 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("foo", result);
         }
 
-        [Test]
-        public void StringProperty()
-        {
-            var proxy = new TestClass(x => Task.FromResult<object>("foo"));
-            var result = proxy.StringProperty;
-            Assert.AreEqual("foo", result);
-        }
-
-        public class TestClass : IProxy
+        public class TestClass : IReverseProxy
         {
             public InvocationHandler InvocationHandler { get; }
 
@@ -80,16 +44,18 @@ namespace SexyProxy.Fody.Tests
 
             public string NoChange(int number)
             {
-                return "foo";
+                var result = (string)this.Invocation().Proceed().Result;
+                return result;
             }
 
             public string Alter(int number)
             {
-                return number.ToString();
+                var result = this.Invocation().Proceed().Result;
+                return (string)result + (string)result;
             }
         }
 
-        public abstract class AbstractClass : IProxy
+        public abstract class AbstractClass : IReverseProxy
         {
             public InvocationHandler InvocationHandler { get; }
 
@@ -109,7 +75,7 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("foo", result);            
         }
 
-        public abstract class SetInvocationHandler : IProxy, ISetInvocationHandler
+        public abstract class SetInvocationHandler : IReverseProxy, ISetInvocationHandler
         {
             public InvocationHandler InvocationHandler { get; set; }
 
@@ -124,14 +90,14 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("foofoo", result);            
         }
 
-        public class AsyncClass : IProxy, ISetInvocationHandler
+        public class AsyncClass : IReverseProxy, ISetInvocationHandler
         {
             public InvocationHandler InvocationHandler { get; set; }
 
             public async Task<string> AsyncMethod(int number)
             {
-                await Task.Delay(1);
-                return "foo";
+                var result = (string)await this.Invocation().Proceed();
+                return result + result;
             }
         }
 
@@ -144,19 +110,20 @@ namespace SexyProxy.Fody.Tests
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local
-        private class ClassWithPrivateMethod : IProxy, ISetInvocationHandler
+        private class ClassWithPrivateMethod : IReverseProxy, ISetInvocationHandler
         {
             public InvocationHandler InvocationHandler { get; set; }
 
             private string PrivateMethod(string s)
             {
-                return s;
+                var result = (string)this.Invocation().Proceed().Result;
+                return result + result;
             }
 
             public string PublicMethod(string s)
             {
                 return PrivateMethod(s);
             }
-        }         
+        }
     }
 }

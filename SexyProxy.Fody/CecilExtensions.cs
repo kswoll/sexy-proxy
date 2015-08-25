@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -63,6 +64,9 @@ namespace SexyProxy.Fody
 
         public static bool IsAssignableFrom(this TypeReference baseType, TypeReference type, Action<string> logger = null)
         {
+            if (type.IsGenericParameter)
+                return baseType.CompareTo(type);
+
             return baseType.Resolve().IsAssignableFrom(type.Resolve(), logger);
         }
 

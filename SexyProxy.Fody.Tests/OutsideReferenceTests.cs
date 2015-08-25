@@ -22,7 +22,7 @@ namespace SexyProxy.Fody.Tests
             proxy.SetHandler(new InvocationHandler(x => Task.FromResult<object>("foo")));
         }
 
-        public class OutsideReferenceClass : IProxy
+        public class OutsideReferenceClass : IReverseProxy
         {
             public InvocationHandler InvocationHandler { get; }
 

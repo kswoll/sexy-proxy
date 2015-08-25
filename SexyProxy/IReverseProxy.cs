@@ -1,6 +1,6 @@
 ﻿namespace SexyProxy
 {
-    public interface IProxy
+    public interface IReverseProxy
     {
         InvocationHandler InvocationHandler { get; }
     }
