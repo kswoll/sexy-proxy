@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using System;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 
 namespace SexyProxy.Fody
@@ -9,19 +10,6 @@ namespace SexyProxy.Fody
         {
         }
 
-        protected override void PrepareTargetForConstructor(ILProcessor il)
-        {
-            base.PrepareTargetForConstructor(il);
-
-            // If target is null, we will make the target ourself
-            var targetNotNull = il.Create(OpCodes.Nop);
-            il.Emit(OpCodes.Dup);                      // Duplicate "target" since it will be consumed by the following branch instruction
-            il.Emit(OpCodes.Brtrue, targetNotNull);    // If target is not null, jump below
-            il.Emit(OpCodes.Pop);                      // Pop the null target off the stack
-            il.Emit(OpCodes.Ldarg_0);                  // Place "this" onto the stack (our new target)
-            il.Append(targetNotNull);
-        }
-
         protected override MethodAttributes GetMethodAttributes(MethodDefinition methodInfo)
         {
             // If we're overriding a method, these attributes are required
@@ -30,19 +18,25 @@ namespace SexyProxy.Fody
             return methodAttributes;
         }
 
-        protected override OpCode GetProceedCallOpCode(MethodDefinition methodInfo)
-        {
-            return OpCodes.Call;
-//            return methodInfo.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
-        }
-
-        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)
+        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
         {
             if (methodInfo.IsAbstract)
+            {
                 CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
+            }
             else
-                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-                    invocationType, invocationConstructor, invokeMethod, proceedTargetMethod);
+            {
+                var targetNotNull = il.Create(OpCodes.Nop);
+                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                il.Emit(OpCodes.Ldfld, Target);              // Load "target" from "this"
+                il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
+
+                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod, _ => il.Emit(OpCodes.Ldarg_0), proceedTargetMethod, OpCodes.Call);
+
+                il.Append(targetNotNull);                    // Mark where the previous branch instruction should jump to                        
+                
+                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod, emitProceedTarget, proceedTargetMethod, proceedOpCode);
+            }
         }
     }
 }

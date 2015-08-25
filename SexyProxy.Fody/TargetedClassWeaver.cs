@@ -60,11 +60,6 @@ namespace SexyProxy.Fody
             CreateConstructor();
         }
 
-        protected virtual void PrepareTargetForConstructor(ILProcessor il)
-        {
-            il.Emit(OpCodes.Ldarg_1);  // Put "target" argument on the stack
-        }
-
         protected override void EmitInvocationHandler(ILProcessor il)
         {
             il.Emit(OpCodes.Ldarg_0);
@@ -89,13 +84,7 @@ namespace SexyProxy.Fody
             {
                 il.EmitDefaultBaseConstructorCall(ProxyType);
                 il.Emit(OpCodes.Ldarg_0);  // Put "this" on the stack for the subsequent stfld instruction way below
-
-                PrepareTargetForConstructor(il);
-
-                // Store whatever is on the stack inside the "target" field.  The value is either: 
-                // * The "target" argument passed in -- if not null.
-                // * If null and T is an interface type, then it is a struct that implements that interface and returns default values for each method
-                // * If null and T is not an interface type, then it is "this", where "proceed" will invoke the base implementation.
+                il.Emit(OpCodes.Ldarg_1);  // Put "target" argument on the stack
                 il.Emit(OpCodes.Stfld, Target);                
     
                 il.Emit(OpCodes.Ldarg_0);                      // Load "this" for subsequent call to stfld

@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -77,13 +78,12 @@ namespace SexyProxy.Fody
             }
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)
+        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
         {
             if (methodInfo.IsAbstract)
                 CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
             else
-                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, 
-                    invocationType, invocationConstructor, invokeMethod, proceedTargetMethod);
+                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod, emitProceedTarget, proceedTargetMethod, proceedOpCode);
         }
 
         protected override void Finish()

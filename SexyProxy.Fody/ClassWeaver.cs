@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -10,7 +11,6 @@ namespace SexyProxy.Fody
     {
         protected abstract TypeDefinition GetProxyType();
         protected abstract MethodDefinition GetStaticConstructor();
-        protected abstract OpCode GetProceedCallOpCode(MethodDefinition methodInfo);
         protected abstract void EmitInvocationHandler(ILProcessor il);
         protected abstract void EmitProceedTarget(ILProcessor il);
 
@@ -174,7 +174,7 @@ namespace SexyProxy.Fody
             proceed.Body.Emit(il =>
             {
                 ImplementProceed(methodInfo, body, il, methodInfoField, proceedReference, proceedDelegateTypeConstructor, invocationType, invocationConstructor, 
-                    invokeMethod, proceedTargetMethod);
+                    invokeMethod, EmitProceedTarget, proceedTargetMethod, GetProceedCallOpCode(methodInfo));
             });
 
             // Implement method
@@ -243,12 +243,17 @@ namespace SexyProxy.Fody
             }            
         }
 
-        protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, MethodReference proceedTargetMethod)
+        protected virtual OpCode GetProceedCallOpCode(MethodDefinition methodInfo)
+        {
+            return OpCodes.Callvirt;
+        }
+
+        protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
         {
             var parameterInfos = methodInfo.Parameters;
 
             // Load target for subsequent call
-            EmitProceedTarget(il);
+            emitProceedTarget(il);
 
             // Decompose array into arguments
             for (int i = 0; i < parameterInfos.Count; i++)
@@ -262,7 +267,7 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
             }
 
-            il.Emit(GetProceedCallOpCode(proceedTargetMethod.Resolve()), proceedTargetMethod);
+            il.Emit(proceedOpCode, proceedTargetMethod);
             il.Emit(OpCodes.Ret);                    
         }
     }
