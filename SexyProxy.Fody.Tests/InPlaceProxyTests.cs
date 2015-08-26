@@ -159,6 +159,7 @@ namespace SexyProxy.Fody.Tests
                 return PrivateMethod(s);
             }
         }
+/*
 
         [Test]
         public void Overloads()
@@ -196,5 +197,6 @@ namespace SexyProxy.Fody.Tests
                 return s + "foo";
             }
         }     
+*/
     }
 }
