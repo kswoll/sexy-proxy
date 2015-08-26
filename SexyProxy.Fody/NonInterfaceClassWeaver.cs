@@ -10,32 +10,44 @@ namespace SexyProxy.Fody
         {
         }
 
-        protected override MethodAttributes GetMethodAttributes(MethodDefinition methodInfo)
+        protected override MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name)
         {
-            // If we're overriding a method, these attributes are required
-            var methodAttributes = methodInfo.IsPublic ? MethodAttributes.Public : MethodAttributes.Family;
-            methodAttributes |= MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual;
-            return methodAttributes;
+            return new NonInterfaceMethodWeaver(Context, SourceType, ProxyType, methodInfo, name, StaticConstructor, Target, InvocationHandler);
         }
 
-        protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, MethodReference proceedDelegateTypeConstructor, TypeReference invocationType, MethodReference invocationConstructor, MethodReference invokeMethod, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
+        protected class NonInterfaceMethodWeaver : TargetedMethodWeaver
         {
-            if (methodInfo.IsAbstract)
+            public NonInterfaceMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor, target, invocationHandler)
             {
-                CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
             }
-            else
+
+            protected override MethodAttributes GetMethodAttributes()
             {
-                var targetNotNull = il.Create(OpCodes.Nop);
-                il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-                il.Emit(OpCodes.Ldfld, Target);              // Load "target" from "this"
-                il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
+                // If we're overriding a method, these attributes are required
+                var methodAttributes = Method.IsPublic ? MethodAttributes.Public : MethodAttributes.Family;
+                methodAttributes |= MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual;
+                return methodAttributes;
+            }
 
-                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod, _ => il.Emit(OpCodes.Ldarg_0), proceedTargetMethod, OpCodes.Call);
+            protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
+            {
+                if (methodInfo.IsAbstract)
+                {
+                    CecilExtensions.CreateDefaultMethodImplementation(methodInfo, il);
+                }
+                else
+                {
+                    var targetNotNull = il.Create(OpCodes.Nop);
+                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    il.Emit(OpCodes.Ldfld, target);              // Load "target" from "this"
+                    il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
 
-                il.Append(targetNotNull);                    // Mark where the previous branch instruction should jump to                        
+                    base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, _ => il.Emit(OpCodes.Ldarg_0), proceedTargetMethod, OpCodes.Call);
+
+                    il.Append(targetNotNull);                    // Mark where the previous branch instruction should jump to                        
                 
-                base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, proceedDelegateTypeConstructor, invocationType, invocationConstructor, invokeMethod, emitProceedTarget, proceedTargetMethod, proceedOpCode);
+                    base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, emitProceedTarget, proceedTargetMethod, proceedOpCode);
+                }
             }
         }
     }

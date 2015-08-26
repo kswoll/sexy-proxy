@@ -120,7 +120,7 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public async void AsyncClassWithInvocation()
         {
-            var proxy = Proxy.CreateProxy<AsyncClass>(x => Task.FromResult<object>("foo"));
+            var proxy = Proxy.CreateProxy<AsyncClass>(async x => "foo" + await x.Proceed());
             var result = await proxy.AsyncMethod(0);
             Assert.AreEqual("foofoo", result);            
         }
@@ -139,9 +139,9 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public void PrivateMethod()
         {
-            var proxy = Proxy.CreateProxy<ClassWithPrivateMethod>(x => Task.FromResult<object>("foo"));
+            var proxy = Proxy.CreateProxy<ClassWithPrivateMethod>(async x => "foo" + await x.Proceed());
             var result = proxy.PublicMethod("foo");
-            Assert.AreEqual("foofoo", result);                        
+            Assert.AreEqual("foofoofoo", result);                        
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local

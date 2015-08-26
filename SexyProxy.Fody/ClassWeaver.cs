@@ -1,15 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 
 namespace SexyProxy.Fody
 {
     public abstract class ClassWeaver
     {
+        protected abstract MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name);
         protected abstract TypeDefinition GetProxyType();
         protected abstract MethodDefinition GetStaticConstructor();
 
@@ -47,6 +45,9 @@ namespace SexyProxy.Fody
             StaticConstructor = GetStaticConstructor();
 
             // Now implement/override all methods
+            var uniqueNames = new Dictionary<string, int>();
+
+            // Now implement/override all methods
             foreach (var methodInfo in Methods.ToArray())
             {
                 var parameterInfos = methodInfo.Parameters;
@@ -57,10 +58,19 @@ namespace SexyProxy.Fody
                 if (methodInfo.IsConstructor)
                     continue;
 
-                var proceedMethodTarget = GetProceedMethodTarget(methodInfo);
-
-                Context.LogInfo($"{proceedMethodTarget}");
-                ProxyMethod(methodInfo, methodInfo.Body, proceedMethodTarget);
+                var name = methodInfo.Name;
+                int index;
+                if (uniqueNames.TryGetValue(name, out index))
+                {
+                    uniqueNames[name] = index + 1;
+                    name += "$" + index;
+                }
+                else
+                {
+                    uniqueNames[name] = 2;
+                }
+                var methodWeaver = CreateMethodWeaver(methodInfo, name);
+                methodWeaver.DefineProxy();
             }
 
             StaticConstructor.Body.Emit(il =>

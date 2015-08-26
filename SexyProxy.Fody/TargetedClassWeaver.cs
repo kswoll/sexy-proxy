@@ -60,18 +60,6 @@ namespace SexyProxy.Fody
             CreateConstructor();
         }
 
-        protected override void EmitInvocationHandler(ILProcessor il)
-        {
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, InvocationHandler);
-        }
-
-        protected override void EmitProceedTarget(ILProcessor il)
-        {
-            il.Emit(OpCodes.Ldarg_0);
-            il.Emit(OpCodes.Ldfld, Target);
-        }
-
         protected virtual void CreateConstructor()
         {
             // Create constructor 
@@ -116,34 +104,58 @@ namespace SexyProxy.Fody
             }
         }
 
-        protected abstract MethodAttributes GetMethodAttributes(MethodDefinition methodInfo);
-
-        protected override void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
+        protected abstract class TargetedMethodWeaver : MethodWeaver
         {
-//                    var isImplemented = !isIntf && methodInfo.IsFinal;
-            MethodAttributes methodAttributes = GetMethodAttributes(methodInfo);
+            protected abstract MethodAttributes GetMethodAttributes();
 
-            // Define the actual method
-            var parameterInfos = methodInfo.Parameters;
-            var method = new MethodDefinition(methodInfo.Name, methodAttributes, methodInfo.ReturnType.ResolveGenericParameter(ProxyType));
-            foreach (var parameterType in parameterInfos.Select(x => x.ParameterType).ToArray())
+            protected readonly FieldReference target;
+            protected readonly FieldDefinition invocationHandler;
+
+            protected TargetedMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor)
             {
-                method.Parameters.Add(new ParameterDefinition(parameterType));
+                this.target = target;
+                this.invocationHandler = invocationHandler;
             }
-            foreach (var parameter in methodInfo.GenericParameters)
+
+            protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-                var newParameter = new GenericParameter(parameter.Name, method);
-                foreach (var constraint in parameter.Constraints)
+    //                    var isImplemented = !isIntf && methodInfo.IsFinal;
+                MethodAttributes methodAttributes = GetMethodAttributes();
+
+                // Define the actual method
+                var parameterInfos = Method.Parameters;
+                var method = new MethodDefinition(Method.Name, methodAttributes, Method.ReturnType.ResolveGenericParameter(Proxy));
+                foreach (var parameterType in parameterInfos.Select(x => x.ParameterType).ToArray())
                 {
-                    newParameter.Constraints.Add(constraint);
+                    method.Parameters.Add(new ParameterDefinition(parameterType));
                 }
-                method.GenericParameters.Add(newParameter);
+                foreach (var parameter in Method.GenericParameters)
+                {
+                    var newParameter = new GenericParameter(parameter.Name, method);
+                    foreach (var constraint in parameter.Constraints)
+                    {
+                        newParameter.Constraints.Add(constraint);
+                    }
+                    method.GenericParameters.Add(newParameter);
+                }
+                Proxy.Methods.Add(method);
+
+                method.Body = new MethodBody(method);
+
+                base.ProxyMethod(method.Body, proceedTargetMethod);
             }
-            ProxyType.Methods.Add(method);
 
-            method.Body = new MethodBody(method);
+            protected override void EmitInvocationHandler(ILProcessor il)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, invocationHandler);
+            }
 
-            base.ProxyMethod(methodInfo, method.Body, proceedTargetMethod);
+            protected override void EmitProceedTarget(ILProcessor il)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, target);
+            }
         }
     }
 }
