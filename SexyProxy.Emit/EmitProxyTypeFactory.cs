@@ -206,6 +206,13 @@ namespace SexyProxy.Emit
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldfld, invocationHandler);
 
+                // Load proxy
+                il.Emit(OpCodes.Ldarg_0);
+
+                // Load invocation handler
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, invocationHandler);
+
                 // Load method info
                 il.Emit(OpCodes.Ldsfld, methodInfoField);
 

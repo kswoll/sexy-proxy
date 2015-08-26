@@ -8,7 +8,7 @@ namespace SexyProxy
     {
         private Func<object[], Task> implementation;
 
-        public VoidAsyncInvocation(MethodInfo method, object[] arguments, Func<object[], Task> implementation) : base(method, arguments)
+        public VoidAsyncInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<object[], Task> implementation) : base(proxy, invocationHandler, method, arguments)
         {
             this.implementation = implementation;
         }

@@ -160,6 +160,12 @@ namespace SexyProxy.Fody
         protected void EmitInvocation(ILProcessor il, FieldReference methodInfoField,
             MethodReference proceed)
         {
+            // Load proxy
+            il.Emit(OpCodes.Ldarg_0);
+
+            // Load invocation handler
+            EmitInvocationHandler(il);
+
             // Load method info
             il.Emit(OpCodes.Ldsfld, methodInfoField);
 
