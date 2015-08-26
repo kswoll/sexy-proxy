@@ -15,6 +15,7 @@ namespace SexyProxy.Emit
         private static MethodInfo invokeTMethod = typeof(InvocationHandler).GetMethod("InvokeT");
         private static MethodInfo asyncInvokeTMethod = typeof(InvocationHandler).GetMethod("AsyncInvokeT");
         private static PropertyInfo invocationArguments = typeof(Invocation).GetProperty("Arguments");
+        private static PropertyInfo invocationProxy = typeof(Invocation).GetProperty("Proxy");
 
         public Type CreateProxyType(Type sourceType)
         {
@@ -162,7 +163,7 @@ namespace SexyProxy.Emit
                         invokeMethod = asyncVoidInvokeMethod;
                     }
                 }
-                var proceed = type.DefineMethod(methodInfo.Name + "__Proceed", MethodAttributes.Private, proceedReturnType, new[] { typeof(Invocation) });
+                var proceed = type.DefineMethod(methodInfo.Name + "$Proceed", MethodAttributes.Private | MethodAttributes.Static, proceedReturnType, new[] { typeof(Invocation) });
                 var proceedIl = proceed.GetILGenerator();
 
                 if (!methodInfo.IsAbstract || isIntf)
@@ -171,7 +172,9 @@ namespace SexyProxy.Emit
                     if (isIntf)
                     {
                         var targetNotNull = proceedIl.DefineLabel();
-                        proceedIl.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                        proceedIl.Emit(OpCodes.Ldarg_0);                    // Load "invocation"
+                        proceedIl.Emit(OpCodes.Call, invocationProxy.GetMethod);
+                        proceedIl.Emit(OpCodes.Castclass, type);
                         proceedIl.Emit(OpCodes.Ldfld, target);              // Load "target" from "this"
                         proceedIl.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
                         DefaultInterfaceImplementationFactory.CreateDefaultMethodImplementation(methodInfo, proceedIl);
@@ -180,12 +183,14 @@ namespace SexyProxy.Emit
 
                     // Load target for subsequent call
                     proceedIl.Emit(OpCodes.Ldarg_0);
+                    proceedIl.Emit(OpCodes.Call, invocationProxy.GetMethod);
+                    proceedIl.Emit(OpCodes.Castclass, type);
                     proceedIl.Emit(OpCodes.Ldfld, target);
 
                     // Decompose array into arguments
                     for (int i = 0; i < parameterInfos.Length; i++)
                     {
-                        proceedIl.Emit(OpCodes.Ldarg, (short)1);            // Push invocation
+                        proceedIl.Emit(OpCodes.Ldarg_0);            // Push invocation
                         proceedIl.Emit(OpCodes.Call, invocationArguments.GetMethod);
                         proceedIl.Emit(OpCodes.Ldc_I4, i);                  // Push element index
                         proceedIl.Emit(OpCodes.Ldelem, typeof(object));     // Get element

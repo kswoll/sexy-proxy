@@ -153,7 +153,7 @@ namespace SexyProxy.Fody
 
             protected override void EmitProceedTarget(ILProcessor il)
             {
-                il.Emit(OpCodes.Ldarg_0);
+                EmitProxyFromProceed(il);
                 il.Emit(OpCodes.Ldfld, target);
             }
         }

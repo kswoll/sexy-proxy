@@ -57,6 +57,7 @@ namespace SexyProxy.Fody
             var reverseProxyGetInvocationHandlerMethod = ModuleDefinition.Import(reverseProxyInterface.Resolve().Properties.Single(x => x.Name == "InvocationHandler").GetMethod);
             var invocationType = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy", "Invocation", sexyProxy));
             var invocationGetArguments = ModuleDefinition.Import(invocationType.Resolve().Properties.Single(x => x.Name == "Arguments").GetMethod);
+            var invocationGetProxy = ModuleDefinition.Import(invocationType.Resolve().Properties.Single(x => x.Name == "Proxy").GetMethod);
             var asyncTaskMethodBuilder = ModuleDefinition.Import(typeof(System.Runtime.CompilerServices.AsyncTaskMethodBuilder<>));
             var methodFinder = ModuleDefinition.Import(ModuleDefinition.FindType("SexyProxy.Reflection", "MethodFinder`1", sexyProxy, "T"));
             var findMethod = ModuleDefinition.Import(methodFinder.Resolve().Methods.Single(x => x.Name == "FindMethod"));
@@ -89,6 +90,7 @@ namespace SexyProxy.Fody
                 VoidInvocationType = voidInvocationType,
                 VoidAsyncInvocationType = voidAsyncInvocationType,
                 InvocationGetArguments = invocationGetArguments,
+                InvocationGetProxy = invocationGetProxy,
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
                 MethodFinder = methodFinder,
                 FindMethod = findMethod

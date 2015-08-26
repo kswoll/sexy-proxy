@@ -115,7 +115,7 @@ namespace SexyProxy.Fody
             // * The method's return type is anything else      (Represented by Func<T>)
             SetUpTypes();
 
-            var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Private, ProceedReturnType.ResolveGenericParameter(Proxy));
+            var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Private | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
             proceed.Parameters.Add(new ParameterDefinition(Context.InvocationType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
@@ -204,6 +204,19 @@ namespace SexyProxy.Fody
             return OpCodes.Callvirt;
         }
 
+        protected void EmitProxyFromProceed(ILProcessor il)
+        {
+            il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+            il.Emit(OpCodes.Call, Context.InvocationGetProxy);
+
+            TypeReference proxy = Proxy;
+            if (proxy.HasGenericParameters)
+            {
+                proxy = proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray());
+            }
+            il.Emit(OpCodes.Castclass, proxy);
+        }
+
         protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
         {
             var parameterInfos = methodInfo.Parameters;
@@ -214,7 +227,7 @@ namespace SexyProxy.Fody
             // Decompose array into arguments
             for (int i = 0; i < parameterInfos.Count; i++)
             {
-                il.Emit(OpCodes.Ldarg, 1);                                                   // Push array 
+                il.Emit(OpCodes.Ldarg_0);                                                    // Push array 
                 il.Emit(OpCodes.Call, Context.InvocationGetArguments);                       // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element

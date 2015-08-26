@@ -68,7 +68,7 @@ namespace SexyProxy.Fody
 
             protected override void EmitProceedTarget(ILProcessor il)
             {
-                il.Emit(OpCodes.Ldarg_0);
+                EmitProxyFromProceed(il);
             }
 
             protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)

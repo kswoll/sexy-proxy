@@ -38,11 +38,11 @@ namespace SexyProxy.Fody
                 else
                 {
                     var targetNotNull = il.Create(OpCodes.Nop);
-                    il.Emit(OpCodes.Ldarg_0);                    // Load "this"
+                    EmitProxyFromProceed(il);
                     il.Emit(OpCodes.Ldfld, target);              // Load "target" from "this"
                     il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
 
-                    base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, _ => il.Emit(OpCodes.Ldarg_0), proceedTargetMethod, OpCodes.Call);
+                    base.ImplementProceed(methodInfo, methodBody, il, methodInfoField, proceed, _ => EmitProxyFromProceed(il), proceedTargetMethod, OpCodes.Call);
 
                     il.Append(targetNotNull);                    // Mark where the previous branch instruction should jump to                        
                 
