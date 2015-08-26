@@ -173,7 +173,7 @@ namespace SexyProxy.Fody
             EmitInvocationArgumentsArray(il, Method.Parameters.Count);
 
             // Load function pointer to proceed method
-            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldnull);
             il.Emit(OpCodes.Ldftn, proceed);
             il.Emit(OpCodes.Newobj, ProceedDelegateTypeConstructor);
 
@@ -246,7 +246,7 @@ namespace SexyProxy.Fody
         {
             if (Method.ReturnType.CompareTo(Context.ModuleDefinition.TypeSystem.Void))
             {
-                ProceedDelegateType = Context.Action1Type.MakeGenericInstanceType(Context.ObjectArrayType);
+                ProceedDelegateType = Context.Action1Type.MakeGenericInstanceType(Context.InvocationType);
                 ProceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
                 ProceedReturnType = Context.ModuleDefinition.Import(typeof(void));
                 InvocationType = Context.VoidInvocationType;
@@ -255,7 +255,7 @@ namespace SexyProxy.Fody
             }
             else
             {
-                ProceedDelegateType = Context.Func2Type.MakeGenericInstanceType(Context.ObjectArrayType, Method.ReturnType);
+                ProceedDelegateType = Context.Func2Type.MakeGenericInstanceType(Context.InvocationType, Method.ReturnType);
                 ProceedDelegateTypeConstructor = Context.Func2Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
                 ProceedReturnType = Context.ModuleDefinition.Import(Method.ReturnType);
                 if (!Context.TaskType.IsAssignableFrom(Method.ReturnType))
