@@ -14,6 +14,7 @@ namespace SexyProxy.Emit
         private static MethodInfo asyncVoidInvokeMethod = typeof(InvocationHandler).GetMethod("VoidAsyncInvoke");
         private static MethodInfo invokeTMethod = typeof(InvocationHandler).GetMethod("InvokeT");
         private static MethodInfo asyncInvokeTMethod = typeof(InvocationHandler).GetMethod("AsyncInvokeT");
+        private static PropertyInfo invocationArguments = typeof(Invocation).GetProperty("Arguments");
 
         public Type CreateProxyType(Type sourceType)
         {
@@ -161,7 +162,7 @@ namespace SexyProxy.Emit
                         invokeMethod = asyncVoidInvokeMethod;
                     }
                 }
-                var proceed = type.DefineMethod(methodInfo.Name + "__Proceed", MethodAttributes.Private, proceedReturnType, new[] { typeof(object[]) });
+                var proceed = type.DefineMethod(methodInfo.Name + "__Proceed", MethodAttributes.Private, proceedReturnType, new[] { typeof(Invocation) });
                 var proceedIl = proceed.GetILGenerator();
 
                 if (!methodInfo.IsAbstract || isIntf)
@@ -184,7 +185,8 @@ namespace SexyProxy.Emit
                     // Decompose array into arguments
                     for (int i = 0; i < parameterInfos.Length; i++)
                     {
-                        proceedIl.Emit(OpCodes.Ldarg, (short)1);            // Push array 
+                        proceedIl.Emit(OpCodes.Ldarg, (short)1);            // Push invocation
+                        proceedIl.Emit(OpCodes.Call, invocationArguments.GetMethod);
                         proceedIl.Emit(OpCodes.Ldc_I4, i);                  // Push element index
                         proceedIl.Emit(OpCodes.Ldelem, typeof(object));     // Get element
                         if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)

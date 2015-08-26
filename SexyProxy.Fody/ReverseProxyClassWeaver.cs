@@ -200,7 +200,8 @@ namespace SexyProxy.Fody
 
                     // Put Invocation onto the stack
                     il.Emit(OpCodes.Ldarg_1);                                                   // Array
-                    il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);                       // Array index
+                    il.Emit(OpCodes.Call, Context.InvocationGetArguments);                      // .Arguments
+                    il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);                           // Array index
                     il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);    // Load element
                     il.Emit(OpCodes.Castclass, InvocationType);                                 // Cast it into specific invocation subclass
 

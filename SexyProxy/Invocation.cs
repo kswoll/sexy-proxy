@@ -24,16 +24,16 @@ namespace SexyProxy
 
     public class InvocationT<T> : Invocation
     {
-        private Func<object[], T> implementation;
+        private Func<Invocation, T> implementation;
 
-        public InvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<object[], T> implementation) : base(proxy, invocationHandler, method, arguments)
+        public InvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<Invocation, T> implementation) : base(proxy, invocationHandler, method, arguments)
         {
             this.implementation = implementation;
         }
 
         public override Task<object> Proceed()
         {
-            return Task.FromResult<object>(implementation(Arguments));
+            return Task.FromResult<object>(implementation(this));
         }
     }
 }

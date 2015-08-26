@@ -37,7 +37,7 @@ namespace SexyProxy
         public T InvokeT<T>(InvocationT<T> invocation)
         {
             var task = GetTask(invocation);
-            return (T) task.Result;
+            return (T)task.Result;
         }
 
         public void VoidInvoke(VoidInvocation invocation)

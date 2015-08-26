@@ -6,16 +6,16 @@ namespace SexyProxy
 {
     public class VoidAsyncInvocation : Invocation
     {
-        private Func<object[], Task> implementation;
+        private Func<Invocation, Task> implementation;
 
-        public VoidAsyncInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<object[], Task> implementation) : base(proxy, invocationHandler, method, arguments)
+        public VoidAsyncInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<Invocation, Task> implementation) : base(proxy, invocationHandler, method, arguments)
         {
             this.implementation = implementation;
         }
 
         public override async Task<object> Proceed()
         {
-            await implementation(Arguments);
+            await implementation(this);
             return null;
         }
     }

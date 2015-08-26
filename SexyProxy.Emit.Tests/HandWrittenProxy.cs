@@ -49,7 +49,7 @@ namespace SexyProxy.Emit.Tests
         {
             var method = typeof(IHandWritten).GetMethod("Sum");
             var arguments = new object[] { first, second };
-            var invocation = new InvocationT<int>(this, invocationHandler, method, arguments, args => target.Sum((int)args[0], (int)args[1]));
+            var invocation = new InvocationT<int>(this, invocationHandler, method, arguments, args => target.Sum((int)args.Arguments[0], (int)args.Arguments[1]));
             return invocationHandler.InvokeT(invocation);
         }
 
@@ -57,7 +57,7 @@ namespace SexyProxy.Emit.Tests
         {
             var method = typeof(IHandWritten).GetMethod("SumAsync");
             var arguments = new object[] { first, second };
-            var invocation = new AsyncInvocationT<int>(this, invocationHandler, method, arguments, args => target.SumAsync((int)args[0], (int)args[1]));
+            var invocation = new AsyncInvocationT<int>(this, invocationHandler, method, arguments, args => target.SumAsync((int)args.Arguments[0], (int)args.Arguments[1]));
             return invocationHandler.AsyncInvokeT(invocation);
         }
 
@@ -74,7 +74,7 @@ namespace SexyProxy.Emit.Tests
             {
                 var method = typeof(IHandWritten).GetProperty("StringProperty").GetMethod;
                 var arguments = new object[] { value };
-                var invocation = new VoidInvocation(this, invocationHandler, method, arguments, args => target.StringProperty = (string)args[0]);
+                var invocation = new VoidInvocation(this, invocationHandler, method, arguments, args => target.StringProperty = (string)args.Arguments[0]);
                 invocationHandler.VoidInvoke(invocation);                
             }
         }

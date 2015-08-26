@@ -116,7 +116,7 @@ namespace SexyProxy.Fody
             SetUpTypes();
 
             var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Private, ProceedReturnType.ResolveGenericParameter(Proxy));
-            proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
+            proceed.Parameters.Add(new ParameterDefinition(Context.InvocationType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
             Proxy.Methods.Add(proceed);
@@ -215,6 +215,7 @@ namespace SexyProxy.Fody
             for (int i = 0; i < parameterInfos.Count; i++)
             {
                 il.Emit(OpCodes.Ldarg, 1);                                                   // Push array 
+                il.Emit(OpCodes.Call, Context.InvocationGetArguments);                       // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
