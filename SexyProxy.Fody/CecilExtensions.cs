@@ -401,6 +401,11 @@ namespace SexyProxy.Fody
                 throw new Exception("Unexpected operand type: " + instruction.Operand.GetType().FullName);
         }
 
+        public static string GenerateSignature(this MethodDefinition method)
+        {
+            return $"{method.Name}$$${method.GenericParameters.Count}$$$" +
+                   $"{string.Join("$$", method.Parameters.Select(x => x.ParameterType.FullName.Replace(".", "$")))}";
+        }
 
 /*
 

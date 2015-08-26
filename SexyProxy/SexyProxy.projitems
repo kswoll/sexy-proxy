@@ -21,6 +21,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Proxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidAsyncInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidInvocation.cs" />
   </ItemGroup>

@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
@@ -168,7 +169,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Proxy]
-        private class ClassWithOverloads 
+        private class ClassWithOverloads
         {
             public string Method()
             {
@@ -176,6 +177,21 @@ namespace SexyProxy.Fody.Tests
             }
 
             public string Method(string s)
+            {
+                return s + "foo";
+            }
+
+            public string Method<T, U>(T s) where T : Dictionary<string, T>
+            {
+                return s + "foo";
+            }
+
+            public string Method<T>(T s) where T : List<T>
+            {
+                return s + "foo";
+            }
+
+            public string Method<T>(object s)
             {
                 return s + "foo";
             }

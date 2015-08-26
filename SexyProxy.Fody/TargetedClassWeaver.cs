@@ -127,7 +127,18 @@ namespace SexyProxy.Fody
             var parameterInfos = methodInfo.Parameters;
             var method = new MethodDefinition(methodInfo.Name, methodAttributes, methodInfo.ReturnType.ResolveGenericParameter(ProxyType));
             foreach (var parameterType in parameterInfos.Select(x => x.ParameterType).ToArray())
+            {
                 method.Parameters.Add(new ParameterDefinition(parameterType));
+            }
+            foreach (var parameter in methodInfo.GenericParameters)
+            {
+                var newParameter = new GenericParameter(parameter.Name, method);
+                foreach (var constraint in parameter.Constraints)
+                {
+                    newParameter.Constraints.Add(constraint);
+                }
+                method.GenericParameters.Add(newParameter);
+            }
             ProxyType.Methods.Add(method);
 
             method.Body = new MethodBody(method);

@@ -54,10 +54,19 @@ namespace SexyProxy.Fody
             else
             {
                 // Transplant the original method into a new one that can be invoked when calling proceed
-                var originalMethod = new MethodDefinition(methodInfo.Name + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
+                var originalMethod = new MethodDefinition(methodInfo.GenerateSignature() + "$Original", MethodAttributes.Private, methodInfo.ReturnType);
                 foreach (var parameter in methodInfo.Parameters)
                 {
                     originalMethod.Parameters.Add(new ParameterDefinition(parameter.Name, parameter.Attributes, parameter.ParameterType));
+                }
+                foreach (var parameter in methodInfo.GenericParameters)
+                {
+                    var newParameter = new GenericParameter(parameter.Name, originalMethod);
+                    foreach (var constraint in parameter.Constraints)
+                    {
+                        newParameter.Constraints.Add(constraint);
+                    }
+                    originalMethod.GenericParameters.Add(newParameter);
                 }
                 originalMethod.Body = new MethodBody(originalMethod);
                 foreach (var variable in methodInfo.Body.Variables)

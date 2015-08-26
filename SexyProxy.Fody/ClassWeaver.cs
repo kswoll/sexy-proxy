@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -83,7 +84,7 @@ namespace SexyProxy.Fody
         protected virtual void ProxyMethod(MethodDefinition methodInfo, MethodBody body, MethodReference proceedTargetMethod)
         {
             // Initialize method info in static constructor
-            var methodInfoFieldDefinition = new FieldDefinition(methodInfo.Name + "__Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
+            var methodInfoFieldDefinition = new FieldDefinition(methodInfo.GenerateSignature() + "$Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
             ProxyType.Fields.Add(methodInfoFieldDefinition);
             FieldReference methodInfoField = methodInfoFieldDefinition;
             StaticConstructor.Body.Emit(il =>
@@ -95,7 +96,15 @@ namespace SexyProxy.Fody
                     methodInfoField = methodInfoField.Bind(genericProxyType);
                     methodDeclaringType = SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
                 }
-                il.StoreMethodInfo(methodInfoField, methodDeclaringType, methodInfo);
+
+                var methodSignature = methodInfo.GenerateSignature();
+                var methodFinder = Context.MethodFinder.MakeGenericInstanceType(methodDeclaringType);
+                var findMethod = Context.FindMethod.Bind(methodFinder);
+
+                // Store MethodInfo into the static field
+                il.Emit(OpCodes.Ldstr, methodSignature);
+                il.Emit(OpCodes.Call, findMethod);
+                il.Emit(OpCodes.Stsfld, methodInfoField);
             });
 
             // Create proceed method (four different types).  The proceed method is what you may call in your invocation handler
@@ -161,7 +170,7 @@ namespace SexyProxy.Fody
                 }
             }
 
-            var proceed = new MethodDefinition(methodInfo.Name + "$Proceed", MethodAttributes.Private, proceedReturnType.ResolveGenericParameter(ProxyType));
+            var proceed = new MethodDefinition(methodInfo.GenerateSignature() + "$Proceed", MethodAttributes.Private, proceedReturnType.ResolveGenericParameter(ProxyType));
             proceed.Parameters.Add(new ParameterDefinition(Context.ObjectArrayType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
