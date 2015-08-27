@@ -51,5 +51,23 @@ namespace SexyProxy.Fody.Tests
             Task<T> Get(int id);
             Task<T[]> GetAll();
         }
+
+        public class Foo<T>
+        {
+            public void LoadFunction()
+            {
+                Test(Nested.Bar);
+            }
+
+            private void Test(Func<T> func) { }
+
+            public class Nested
+            {
+                public static T Bar()
+                {
+                    return default(T);
+                }
+            }
+        }
     }
 }

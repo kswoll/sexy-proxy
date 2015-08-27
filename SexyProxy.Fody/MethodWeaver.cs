@@ -43,6 +43,15 @@ namespace SexyProxy.Fody
         public void DefineProxy()
         {
             ProceedClass = new TypeDefinition(Proxy.Namespace, Name + "$Proceed", TypeAttributes.NestedPrivate, Context.ObjectType);
+            foreach (var parameter in Proxy.GenericParameters)
+            {
+                var newParameter = new GenericParameter(parameter.Name, ProceedClass);
+                foreach (var constraint in parameter.Constraints)
+                {
+                    newParameter.Constraints.Add(constraint);
+                }
+                ProceedClass.GenericParameters.Add(newParameter);
+            }
 
             if (Method.HasGenericParameters)
             {
@@ -115,15 +124,17 @@ namespace SexyProxy.Fody
             // * The method's return type is anything else      (Represented by Func<T>)
             SetUpTypes();
 
-            var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Private | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
+            var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Public | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
             proceed.Parameters.Add(new ParameterDefinition(Context.InvocationType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
-            Proxy.Methods.Add(proceed);
+            ProceedClass.Methods.Add(proceed);
 
             MethodReference proceedReference = proceed;
-            if (Proxy.HasGenericParameters) 
-                proceedReference = proceed.Bind(Proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray()));
+            TypeReference proceedClass = ProceedClass;
+
+            if (ProceedClass.HasGenericParameters) 
+                proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(ProceedClass.GenericParameters.ToArray()));
 
             proceed.Body.Emit(il =>
             {
@@ -157,8 +168,7 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Callvirt, InvokeMethod);
         }
 
-        protected void EmitInvocation(ILProcessor il, FieldReference methodInfoField,
-            MethodReference proceed)
+        protected void EmitInvocation(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
         {
             // Load proxy
             il.Emit(OpCodes.Ldarg_0);
@@ -209,12 +219,17 @@ namespace SexyProxy.Fody
             il.Emit(OpCodes.Ldarg_0);                    // Load "this"
             il.Emit(OpCodes.Call, Context.InvocationGetProxy);
 
+            il.Emit(OpCodes.Castclass, GetProxyTypeReference());
+        }
+
+        protected TypeReference GetProxyTypeReference()
+        {
             TypeReference proxy = Proxy;
             if (proxy.HasGenericParameters)
             {
                 proxy = proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray());
             }
-            il.Emit(OpCodes.Castclass, proxy);
+            return proxy;
         }
 
         protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)

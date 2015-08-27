@@ -8,7 +8,10 @@ namespace SexyProxy
     {
         public Type CreateProxyType(Type sourceType)
         {
-            var proxyType = sourceType.Assembly.GetType(sourceType.FullName.Split('[').First().Replace('`', '$') + "$Proxy");
+            var name = sourceType.FullName.Split('`')[0] + "$Proxy";
+            if (sourceType.IsGenericType)
+                name += "`" + sourceType.GenericTypeArguments.Length;
+            var proxyType = sourceType.Assembly.GetType(name);
             if (proxyType.ContainsGenericParameters)
             {
                 proxyType = proxyType.MakeGenericType(sourceType.GetGenericArguments());

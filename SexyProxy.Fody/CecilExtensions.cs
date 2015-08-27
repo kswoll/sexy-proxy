@@ -140,6 +140,22 @@ namespace SexyProxy.Fody
 
             return reference;
         }
+
+        public static GenericInstanceType MakeGenericNestedType(this TypeReference self, params TypeReference[] arguments)
+        {
+            if (self == null)
+                throw new ArgumentNullException(nameof(self));
+            if (arguments == null)
+                throw new ArgumentNullException(nameof(arguments));
+            if (arguments.Length == 0)
+                throw new ArgumentException();
+
+            var genericInstanceType = new GenericInstanceType(self);
+            foreach (TypeReference typeReference in arguments)
+                genericInstanceType.GenericArguments.Add(typeReference);
+            return genericInstanceType;
+        }
+
         /*
         public static MethodReference BindDefinition(this MethodReference method, TypeReference genericTypeDefinition)
         {

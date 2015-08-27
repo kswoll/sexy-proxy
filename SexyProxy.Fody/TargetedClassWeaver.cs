@@ -28,7 +28,10 @@ namespace SexyProxy.Fody
             var visibility = SourceType.Attributes & (TypeAttributes.Public | TypeAttributes.NestedPrivate | 
                 TypeAttributes.NestedFamily | TypeAttributes.NestedAssembly | TypeAttributes.NestedPublic | 
                 TypeAttributes.NestedFamANDAssem | TypeAttributes.NestedFamORAssem);
-            var type = new TypeDefinition(SourceType.Namespace, SourceType.Name.Replace('`', '$') + "$Proxy", visibility);
+            var name = SourceType.Name.Split('`')[0] + "$Proxy";
+            if (SourceType.GenericParameters.Any())
+                name += "`" + SourceType.GenericParameters.Count;
+            var type = new TypeDefinition(SourceType.Namespace, name, visibility);
             foreach (var parameter in SourceType.GenericParameters)
             {
                 var newParameter = new GenericParameter("$" + parameter.Name, type);
@@ -114,6 +117,9 @@ namespace SexyProxy.Fody
             protected TargetedMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor)
             {
                 this.target = target;
+                if (Proxy.GenericParameters.Any())
+                    this.target = target.Bind(proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray()));
+
                 this.invocationHandler = invocationHandler;
             }
 
