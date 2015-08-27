@@ -59,6 +59,7 @@
     <Compile Include="HandWrittenWithDynamicProxyTests.cs" />
     <Compile Include="IHandWritten.cs" />
     <Compile Include="InPlaceProxyTests.cs" />
+    <Compile Include="OverloadTests.cs" />
     <Compile Include="ReverseProxyTests.cs" />
     <Compile Include="OutsideReferenceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

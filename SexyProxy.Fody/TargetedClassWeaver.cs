@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -12,6 +13,12 @@ namespace SexyProxy.Fody
 
         protected TargetedClassWeaver(WeaverContext context, TypeDefinition sourceType) : base(context, sourceType)
         {
+        }
+
+        protected override IEnumerable<MethodDefinition> GetMethods()
+        {
+            var methods = SourceType.Methods.Where(x => !x.IsStatic && x.IsVirtual);
+            return methods;
         }
 
         protected virtual TypeReference GetBaseType(GenericParameter[] genericParameters) => !SourceType.HasGenericParameters ? (TypeReference)SourceType : SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());

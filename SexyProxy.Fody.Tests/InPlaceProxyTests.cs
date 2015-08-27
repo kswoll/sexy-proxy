@@ -163,33 +163,15 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public void Overloads()
         {
-            var proxy = Proxy.CreateProxy<ClassWithOverloads>(x => Task.FromResult<object>("foo"));
+            var proxy = Proxy.CreateProxy<ClassWithOverloads>(async x => "foo" + await x.Proceed());
             var result = proxy.Method("foo");
-            Assert.AreEqual("foofoo", result);                        
-
-
-            
+            Assert.AreEqual("foofoofoo", result);                        
         }
 
-        private class Foo
+        private class ClassWithOverloads : IProxy, ISetInvocationHandler
         {
-            public void FooTest<T, U>() where T : Dictionary<string, T>
-            {
-                Func<Invocation, string> func = Nested<T, U>.Proceed;
-            }
+            public InvocationHandler InvocationHandler { get; set; }
 
-            public class Nested<T, U> where T : Dictionary<string, T>
-            {
-                public static string Proceed(Invocation invocation)
-                {
-                    return "foo";
-                }
-            }
-        }
-
-        [Proxy]
-        private class ClassWithOverloads
-        {
             public string Method()
             {
                 return "foo";
@@ -209,6 +191,6 @@ namespace SexyProxy.Fody.Tests
             {
                 return s + "foo";
             }
-        }     
+        }              
     }
 }
