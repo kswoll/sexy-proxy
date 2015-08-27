@@ -14,6 +14,14 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual("foofoofoo", result);                        
         }
 
+        [Test]
+        public void MethodT()
+        {
+            var proxy = Proxy.CreateProxy<ClassWithOverloads>(async x => "foo" + await x.Proceed());
+            var result = proxy.Method(5);
+            Assert.AreEqual("foo5bar", result);                        
+        }
+
         [Proxy]
         private class ClassWithOverloads
         {
@@ -27,14 +35,14 @@ namespace SexyProxy.Fody.Tests
                 return s + "foo";
             }
 
-            public string Method<T, U>(T s) 
+            public virtual string Method<T, U>(T s) 
             {
                 return s + "foo";
             }
 
-            public string Method<T>(T s)
+            public virtual string Method<T>(T s)
             {
-                return s + "foo";
+                return s + "bar";
             }
         }              
     }

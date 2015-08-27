@@ -127,7 +127,7 @@ namespace SexyProxy.Fody
             // * The method's return type is anything else      (Represented by Func<T>)
             SetUpTypes();
 
-            var proceed = new MethodDefinition(Name + "$ProceedMethod", MethodAttributes.Public | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
+            var proceed = new MethodDefinition("Proceed", MethodAttributes.Public | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
             proceed.Parameters.Add(new ParameterDefinition(Context.InvocationType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
