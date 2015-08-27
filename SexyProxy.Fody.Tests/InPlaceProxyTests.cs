@@ -159,7 +159,6 @@ namespace SexyProxy.Fody.Tests
                 return PrivateMethod(s);
             }
         }
-/*
 
         [Test]
         public void Overloads()
@@ -167,6 +166,25 @@ namespace SexyProxy.Fody.Tests
             var proxy = Proxy.CreateProxy<ClassWithOverloads>(x => Task.FromResult<object>("foo"));
             var result = proxy.Method("foo");
             Assert.AreEqual("foofoo", result);                        
+
+
+            
+        }
+
+        private class Foo
+        {
+            public void FooTest<T, U>() where T : Dictionary<string, T>
+            {
+                Func<Invocation, string> func = Nested<T, U>.Proceed;
+            }
+
+            public class Nested<T, U> where T : Dictionary<string, T>
+            {
+                public static string Proceed(Invocation invocation)
+                {
+                    return "foo";
+                }
+            }
         }
 
         [Proxy]
@@ -182,21 +200,15 @@ namespace SexyProxy.Fody.Tests
                 return s + "foo";
             }
 
-            public string Method<T, U>(T s) where T : Dictionary<string, T>
+            public string Method<T, U>(T s) 
             {
                 return s + "foo";
             }
 
-            public string Method<T>(T s) where T : List<T>
-            {
-                return s + "foo";
-            }
-
-            public string Method<T>(object s)
+            public string Method<T>(T s)
             {
                 return s + "foo";
             }
         }     
-*/
     }
 }

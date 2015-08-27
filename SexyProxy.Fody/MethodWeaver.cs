@@ -42,7 +42,10 @@ namespace SexyProxy.Fody
 
         public void DefineProxy()
         {
-            ProceedClass = new TypeDefinition(Proxy.Namespace, Name + "$Proceed", TypeAttributes.NestedPrivate, Context.ObjectType);
+            var name = Name + "$Proceed";
+            if (Proxy.GenericParameters.Count > 0 || Method.GenericParameters.Count > 0)
+                name += "`" + (Proxy.GenericParameters.Count + Method.GenericParameters.Count);
+            ProceedClass = new TypeDefinition(Proxy.Namespace, name, TypeAttributes.NestedPrivate, Context.ObjectType);
             foreach (var parameter in Proxy.GenericParameters)
             {
                 var newParameter = new GenericParameter(parameter.Name, ProceedClass);
@@ -133,8 +136,11 @@ namespace SexyProxy.Fody
             MethodReference proceedReference = proceed;
             TypeReference proceedClass = ProceedClass;
 
-            if (ProceedClass.HasGenericParameters) 
-                proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(ProceedClass.GenericParameters.ToArray()));
+            if (ProceedClass.HasGenericParameters)
+            {
+//                Debugger.Launch();
+                proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(Proxy.GenericParameters.Concat(body.Method.GenericParameters).ToArray()));
+            }
 
             proceed.Body.Emit(il =>
             {
@@ -247,12 +253,16 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
-                    il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType);
+                    il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass));
                 else                                                                         // Otherwise, cast it
-                    il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType);
+                    il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass));
             }
 
-            il.Emit(proceedOpCode, proceedTargetMethod);
+            var genericProceedTargetMethod = proceedTargetMethod;
+            if (Method.GenericParameters.Count > 0)
+                genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(Method.GenericParameters.Select(x => x.ResolveGenericParameter(ProceedClass)).ToArray());
+
+            il.Emit(proceedOpCode, genericProceedTargetMethod);
             il.Emit(OpCodes.Ret);                    
         }
  

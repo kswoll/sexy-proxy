@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -50,7 +51,10 @@ namespace SexyProxy.Fody
                         {
                             il.Emit(OpCodes.Ldarg, (short)i + 1);
                         }
-                        il.Emit(OpCodes.Call, GetProceedMethodTarget());
+                        var methodReference = GetProceedMethodTarget();
+                        if (Method.GenericParameters.Count > 0)
+                            methodReference = methodReference.MakeGenericMethod(callBaseMethod.GenericParameters.ToArray());
+                        il.Emit(OpCodes.Call, methodReference);
                         il.Emit(OpCodes.Ret);
                     });
                     Proxy.Methods.Add(callBaseMethod);

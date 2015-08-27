@@ -20,7 +20,7 @@ namespace SexyProxy.Reflection
         private static string GenerateSignature(MethodInfo method)
         {
             return $"{method.Name}$$${method.GetGenericArguments().Length}$$$" +
-                   $"{string.Join("$$", method.GetParameters().Select(x => x.ParameterType.FullName.Replace(".", "$")))}";
+                   $"{string.Join("$$", method.GetParameters().Select(x => (x.ParameterType.FullName ?? x.ParameterType.Name).Replace(".", "$")))}";
         }
 
         public static MethodInfo FindMethod(string signature)
