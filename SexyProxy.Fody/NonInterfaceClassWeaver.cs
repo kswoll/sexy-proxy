@@ -35,15 +35,7 @@ namespace SexyProxy.Fody
                         var newParameter = new ParameterDefinition(parameter.Name, ParameterAttributes.None, parameter.ParameterType);
                         callBaseMethod.Parameters.Add(newParameter);
                     }
-                    foreach (var parameter in Method.GenericParameters)
-                    {
-                        var newParameter = new GenericParameter(parameter.Name, callBaseMethod);
-                        foreach (var constraint in parameter.Constraints)
-                        {
-                            newParameter.Constraints.Add(constraint);
-                        }
-                        callBaseMethod.GenericParameters.Add(newParameter);
-                    }
+                    Method.CopyGenericParameters(callBaseMethod);
                     callBaseMethod.Body.Emit(il =>
                     {
                         il.Emit(OpCodes.Ldarg_0);

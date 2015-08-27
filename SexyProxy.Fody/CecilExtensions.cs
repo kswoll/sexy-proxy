@@ -423,6 +423,22 @@ namespace SexyProxy.Fody
                    $"{string.Join("$$", method.Parameters.Select(x => x.ParameterType.FullName.Replace(".", "$")))}";
         }
 
+        public static void CopyGenericParameters(this IGenericParameterProvider source, IGenericParameterProvider destination)
+        {
+            if (source.HasGenericParameters)
+            {
+                foreach (var genericParameter in source.GenericParameters)
+                {
+                    var newGenericParameter = new GenericParameter(genericParameter.Name, destination);
+                    foreach (var constraint in genericParameter.Constraints)
+                    {
+                        newGenericParameter.Constraints.Add(constraint);
+                    }
+                    destination.GenericParameters.Add(newGenericParameter);
+                }
+            }
+        }
+
 /*
 
         public static IEnumerable<TypeDefinition> GetAllTypes(this ModuleDefinition module)

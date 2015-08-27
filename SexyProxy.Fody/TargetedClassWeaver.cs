@@ -39,15 +39,7 @@ namespace SexyProxy.Fody
             if (SourceType.GenericParameters.Any())
                 name += "`" + SourceType.GenericParameters.Count;
             var type = new TypeDefinition(SourceType.Namespace, name, visibility);
-            foreach (var parameter in SourceType.GenericParameters)
-            {
-                var newParameter = new GenericParameter("$" + parameter.Name, type);
-                foreach (var constraint in parameter.Constraints)
-                {
-                    newParameter.Constraints.Add(constraint);
-                }
-                type.GenericParameters.Add(newParameter);
-            }
+            SourceType.CopyGenericParameters(type);
             type.BaseType = GetBaseType(type.GenericParameters.ToArray());
             var intfs = GetInterfaces(type.GenericParameters.ToArray());
             foreach (var intf in intfs)
@@ -142,15 +134,7 @@ namespace SexyProxy.Fody
                 {
                     method.Parameters.Add(new ParameterDefinition(parameterType));
                 }
-                foreach (var parameter in Method.GenericParameters)
-                {
-                    var newParameter = new GenericParameter(parameter.Name, method);
-                    foreach (var constraint in parameter.Constraints)
-                    {
-                        newParameter.Constraints.Add(constraint);
-                    }
-                    method.GenericParameters.Add(newParameter);
-                }
+                Method.CopyGenericParameters(method);
                 Proxy.Methods.Add(method);
 
                 method.Body = new MethodBody(method);

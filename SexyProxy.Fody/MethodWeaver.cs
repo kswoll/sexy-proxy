@@ -46,28 +46,8 @@ namespace SexyProxy.Fody
             if (Proxy.GenericParameters.Count > 0 || Method.GenericParameters.Count > 0)
                 name += "`" + (Proxy.GenericParameters.Count + Method.GenericParameters.Count);
             ProceedClass = new TypeDefinition(Proxy.Namespace, name, TypeAttributes.NestedPrivate, Context.ObjectType);
-            foreach (var parameter in Proxy.GenericParameters)
-            {
-                var newParameter = new GenericParameter(parameter.Name, ProceedClass);
-                foreach (var constraint in parameter.Constraints)
-                {
-                    newParameter.Constraints.Add(constraint);
-                }
-                ProceedClass.GenericParameters.Add(newParameter);
-            }
-
-            if (Method.HasGenericParameters)
-            {
-                foreach (var genericParameter in Method.GenericParameters)
-                {
-                    var newGenericParameter = new GenericParameter(genericParameter.Name, ProceedClass);
-                    foreach (var constraint in genericParameter.Constraints)
-                    {
-                        newGenericParameter.Constraints.Add(constraint);
-                    }
-                    ProceedClass.GenericParameters.Add(newGenericParameter);
-                }
-            }
+            Proxy.CopyGenericParameters(ProceedClass);
+            Method.CopyGenericParameters(ProceedClass);
 
             var proceedMethodTarget = GetProceedMethodTarget();
 

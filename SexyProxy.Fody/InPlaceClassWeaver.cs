@@ -109,15 +109,7 @@ namespace SexyProxy.Fody
                     {
                         originalMethod.Parameters.Add(new ParameterDefinition(parameter.Name, parameter.Attributes, parameter.ParameterType));
                     }
-                    foreach (var parameter in Method.GenericParameters)
-                    {
-                        var newParameter = new GenericParameter(parameter.Name, originalMethod);
-                        foreach (var constraint in parameter.Constraints)
-                        {
-                            newParameter.Constraints.Add(constraint);
-                        }
-                        originalMethod.GenericParameters.Add(newParameter);
-                    }
+                    Method.CopyGenericParameters(originalMethod);
                     originalMethod.Body = new MethodBody(originalMethod);
                     foreach (var variable in Method.Body.Variables)
                     {
