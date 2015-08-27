@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -53,12 +52,6 @@ namespace SexyProxy.Fody
         {
             public InPlaceMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor) : base(context, source, proxy, method, name, staticConstructor)
             {
-            }
-
-            protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
-            {
-    //            Debugger.Launch();
-                base.ImplementBody(il, methodInfoField, proceed);
             }
 
             protected override OpCode GetProceedCallOpCode()

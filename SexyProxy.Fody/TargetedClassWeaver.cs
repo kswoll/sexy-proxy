@@ -124,7 +124,6 @@ namespace SexyProxy.Fody
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-    //                    var isImplemented = !isIntf && methodInfo.IsFinal;
                 MethodAttributes methodAttributes = GetMethodAttributes();
 
                 // Define the actual method
