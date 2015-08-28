@@ -22,8 +22,8 @@ namespace SexyProxy.Reflection
         {
             if (type.FullName == null)
                 return type.Name;
-            if (type.IsGenericType)
-                return string.Format("{0}<{1}>", type.FullName.Split('[')[0], string.Join(", ", type.GetGenericArguments().Select(x => GetFriendlyName(x))));
+            else if (type.IsGenericType)
+                return $"{type.FullName.Split('[')[0]}<{string.Join(", ", type.GetGenericArguments().Select(x => GetFriendlyName(x)))}>";
             else
                 return type.FullName;
         }

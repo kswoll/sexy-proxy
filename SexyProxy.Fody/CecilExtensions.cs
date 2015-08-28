@@ -199,7 +199,27 @@ namespace SexyProxy.Fody
             {
                 result.GenericParameters.Add(new GenericParameter(typeParameter, result));
             }
-            return result;
+            return currentModule.Import(result);
+        }
+
+        public static MethodReference FindConstructor(this ModuleDefinition currentModule, TypeReference type)
+        {
+            return currentModule.Import(type.Resolve().GetConstructors().Single());
+        }
+
+        public static MethodReference FindGetter(this ModuleDefinition currentModule, TypeReference type, string propertyName)
+        {
+            return currentModule.Import(type.Resolve().Properties.Single(x => x.Name == propertyName).GetMethod);
+        }
+
+        public static MethodReference FindSetter(this ModuleDefinition currentModule, TypeReference type, string propertyName)
+        {
+            return currentModule.Import(type.Resolve().Properties.Single(x => x.Name == propertyName).SetMethod);
+        }
+
+        public static MethodReference FindMethod(this ModuleDefinition currentModule, TypeReference type, string name)
+        {
+            return currentModule.Import(type.Resolve().Methods.Single(x => x.Name == name));
         }
 
         public static void EmitDefaultBaseConstructorCall(this ILProcessor il, TypeDefinition baseType)
