@@ -117,7 +117,6 @@ namespace SexyProxy.Fody
 
             if (ProceedClass.HasGenericParameters)
             {
-//                Debugger.Launch();
                 proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(Proxy.GenericParameters.Concat(body.Method.GenericParameters).ToArray()));
             }
 

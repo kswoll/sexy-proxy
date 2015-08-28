@@ -29,11 +29,7 @@ namespace SexyProxy.Fody
                 if (!Method.IsAbstract)
                 {
                     callBaseMethod = new MethodDefinition(Name + "$Base", MethodAttributes.Private, Method.ReturnType);
-                    foreach (var parameter in Method.Parameters)
-                    {
-                        var newParameter = new ParameterDefinition(parameter.Name, ParameterAttributes.None, parameter.ParameterType);
-                        callBaseMethod.Parameters.Add(newParameter);
-                    }
+                    Method.CopyParameters(callBaseMethod);
                     Method.CopyGenericParameters(callBaseMethod);
                     callBaseMethod.Body.Emit(il =>
                     {

@@ -72,7 +72,6 @@ namespace SexyProxy.Fody
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-    //            Debugger.Launch();
                 if (Method.ReturnType.CompareTo(Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
                     return;
                 if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(Context.InvocationHandlerType))
@@ -98,10 +97,7 @@ namespace SexyProxy.Fody
                 {
                     // Transplant the original method into a new one that can be invoked when calling proceed
                     var originalMethod = new MethodDefinition(Method.GenerateSignature() + "$Original", MethodAttributes.Private, Method.ReturnType);
-                    foreach (var parameter in Method.Parameters)
-                    {
-                        originalMethod.Parameters.Add(new ParameterDefinition(parameter.Name, parameter.Attributes, parameter.ParameterType));
-                    }
+                    Method.CopyParameters(originalMethod);
                     Method.CopyGenericParameters(originalMethod);
                     originalMethod.Body = new MethodBody(originalMethod);
                     foreach (var variable in Method.Body.Variables)
