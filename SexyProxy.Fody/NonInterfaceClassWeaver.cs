@@ -12,14 +12,22 @@ namespace SexyProxy.Fody
 
         protected override MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name)
         {
-            return new NonInterfaceMethodWeaver(Context, SourceType, ProxyType, methodInfo, name, StaticConstructor, Target, InvocationHandler);
+            return new NonInterfaceMethodWeaver(this, methodInfo, name, StaticConstructor, Target, InvocationHandler);
+        }
+
+        public override MethodAttributes GetMethodAttributes(MethodDefinition methodInfo)
+        {
+            // If we're overriding a method, these attributes are required
+            var methodAttributes = methodInfo.IsPublic ? MethodAttributes.Public : MethodAttributes.Family;
+            methodAttributes |= MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual;
+            return methodAttributes;
         }
 
         protected class NonInterfaceMethodWeaver : TargetedMethodWeaver
         {
             private MethodDefinition callBaseMethod;
 
-            public NonInterfaceMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor, target, invocationHandler)
+            public NonInterfaceMethodWeaver(NonInterfaceClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(classWeaver, method, name, staticConstructor, target, invocationHandler)
             {
             }
 
@@ -44,17 +52,9 @@ namespace SexyProxy.Fody
                         il.Emit(OpCodes.Call, methodReference);
                         il.Emit(OpCodes.Ret);
                     });
-                    Proxy.Methods.Add(callBaseMethod);
+                    ClassWeaver.ProxyType.Methods.Add(callBaseMethod);
                 }
                 base.ProxyMethod(body, proceedTargetMethod);
-            }
-
-            protected override MethodAttributes GetMethodAttributes()
-            {
-                // If we're overriding a method, these attributes are required
-                var methodAttributes = Method.IsPublic ? MethodAttributes.Public : MethodAttributes.Family;
-                methodAttributes |= MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.Virtual;
-                return methodAttributes;
             }
 
             protected override void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)

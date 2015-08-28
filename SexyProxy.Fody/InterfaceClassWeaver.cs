@@ -15,7 +15,13 @@ namespace SexyProxy.Fody
 
         protected override MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name)
         {
-            return new InterfaceMethodWeaver(Context, SourceType, ProxyType, methodInfo, name, StaticConstructor, Target, InvocationHandler);
+            return new InterfaceMethodWeaver(this, methodInfo, name, StaticConstructor, Target, InvocationHandler);
+        }
+
+        public override MethodAttributes GetMethodAttributes(MethodDefinition methodInfo)
+        {
+            // The attributes required for the normal implementation of an interface method
+            return MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual;
         }
 
         protected override TypeReference GetBaseType(GenericParameter[] genericParameters) => Context.ObjectType;
@@ -34,14 +40,8 @@ namespace SexyProxy.Fody
 
         protected class InterfaceMethodWeaver : TargetedMethodWeaver
         {
-            public InterfaceMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor, target, invocationHandler)
+            public InterfaceMethodWeaver(InterfaceClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(classWeaver, method, name, staticConstructor, target, invocationHandler)
             {
-            }
-
-            protected override MethodAttributes GetMethodAttributes()
-            {
-                // The attributes required for the normal implementation of an interface method
-                return MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Virtual;
             }
 
             protected override OpCode GetProceedCallOpCode()
@@ -54,7 +54,7 @@ namespace SexyProxy.Fody
                 // If T is an interface, then we want to check if target is null; if so, we want to just return the default value
                 var targetNotNull = il.Create(OpCodes.Nop);
                 EmitProxyFromProceed(il);
-                il.Emit(OpCodes.Ldfld, target);              // Load "target" from "this"
+                il.Emit(OpCodes.Ldfld, ClassWeaver.Target);              // Load "target" from "this"
                 il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
                 CecilExtensions.CreateDefaultMethodImplementation(methodBody.Method, il);
 

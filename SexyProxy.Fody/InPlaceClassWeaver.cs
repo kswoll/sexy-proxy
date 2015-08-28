@@ -14,7 +14,7 @@ namespace SexyProxy.Fody
 
         protected override MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name)
         {
-            return new InPlaceMethodWeaver(Context, SourceType, ProxyType, methodInfo, name, StaticConstructor);
+            return new InPlaceMethodWeaver(this, methodInfo, name, StaticConstructor);
         }
 
         protected override void Finish()
@@ -50,7 +50,7 @@ namespace SexyProxy.Fody
 
         protected class InPlaceMethodWeaver : MethodWeaver
         {
-            public InPlaceMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor) : base(context, source, proxy, method, name, staticConstructor)
+            public InPlaceMethodWeaver(InPlaceClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor) : base(classWeaver, method, name, staticConstructor)
             {
             }
 
@@ -62,7 +62,7 @@ namespace SexyProxy.Fody
             protected override void EmitInvocationHandler(ILProcessor il)
             {
                 il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Callvirt, Context.ProxyGetInvocationHandlerMethod);
+                il.Emit(OpCodes.Callvirt, ClassWeaver.Context.ProxyGetInvocationHandlerMethod);
             }
 
             protected override void EmitProceedTarget(ILProcessor il)
@@ -72,9 +72,9 @@ namespace SexyProxy.Fody
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-                if (Method.ReturnType.CompareTo(Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
+                if (Method.ReturnType.CompareTo(ClassWeaver.Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
                     return;
-                if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(Context.InvocationHandlerType))
+                if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(ClassWeaver.Context.InvocationHandlerType))
                     return;
 
                 Method.Body = body = new MethodBody(Method);
@@ -112,7 +112,7 @@ namespace SexyProxy.Fody
                             il.Append(instruction);
                         }
                     });
-                    Proxy.Methods.Add(originalMethod);                
+                    ClassWeaver.ProxyType.Methods.Add(originalMethod);                
                 
                     return originalMethod;
                 }

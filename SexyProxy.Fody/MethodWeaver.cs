@@ -14,9 +14,7 @@ namespace SexyProxy.Fody
         protected abstract void EmitInvocationHandler(ILProcessor il);
         protected abstract void EmitProceedTarget(ILProcessor il);
 
-        public WeaverContext Context { get; }
-        public TypeDefinition Source { get; }
-        public TypeDefinition Proxy { get; }
+        public ClassWeaver ClassWeaver { get; }
         public MethodDefinition Method { get; }
         public string Name { get; }
         public MethodDefinition StaticConstructor { get; }
@@ -29,11 +27,9 @@ namespace SexyProxy.Fody
         public MethodReference InvocationConstructor { get; private set; }
         public MethodReference InvokeMethod { get; private set; }
 
-        protected MethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor)
+        protected MethodWeaver(ClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor)
         {
-            Context = context;
-            Source = source;
-            Proxy = proxy;
+            ClassWeaver = classWeaver;
             Method = method;
             Name = name;
             StaticConstructor = staticConstructor;
@@ -42,49 +38,49 @@ namespace SexyProxy.Fody
         public void DefineProxy()
         {
             var name = Name + "$Proceed";
-            var arity = Proxy.GenericParameters.Count + Method.GenericParameters.Count;
+            var arity = ClassWeaver.ProxyType.GenericParameters.Count + Method.GenericParameters.Count;
             if (arity > 0)
             {
                 name += "`" + arity;
             }
-            ProceedClass = new TypeDefinition(Proxy.Namespace, name, TypeAttributes.NestedPrivate, Context.ObjectType);
-            Proxy.CopyGenericParameters(ProceedClass);
+            ProceedClass = new TypeDefinition(ClassWeaver.ProxyType.Namespace, name, TypeAttributes.NestedPrivate, ClassWeaver.Context.ObjectType);
+            ClassWeaver.ProxyType.CopyGenericParameters(ProceedClass);
             Method.CopyGenericParameters(ProceedClass);
 
             var proceedMethodTarget = GetProceedMethodTarget();
 
             ProxyMethod(Method.Body, proceedMethodTarget);
 
-            Proxy.NestedTypes.Add(ProceedClass);
+            ClassWeaver.ProxyType.NestedTypes.Add(ProceedClass);
         }
 
         protected virtual MethodReference GetProceedMethodTarget()
         {
             MethodReference result = Method;
-            if (Source.HasGenericParameters)
-                result = Method.Bind(Source.MakeGenericInstanceType(Proxy.GenericParameters.ToArray()));
+            if (ClassWeaver.SourceType.HasGenericParameters)
+                result = Method.Bind(ClassWeaver.SourceType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray()));
             return result;
         }
 
         protected virtual void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
         {
             // Initialize method info in static constructor
-            var methodInfoFieldDefinition = new FieldDefinition(Name + "$Info", FieldAttributes.Private | FieldAttributes.Static, Context.MethodInfoType);
-            Proxy.Fields.Add(methodInfoFieldDefinition);
+            var methodInfoFieldDefinition = new FieldDefinition(Name + "$Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.MethodInfoType);
+            ClassWeaver.ProxyType.Fields.Add(methodInfoFieldDefinition);
             FieldReference methodInfoField = methodInfoFieldDefinition;
             StaticConstructor.Body.Emit(il =>
             {
                 TypeReference methodDeclaringType = Method.DeclaringType;
-                if (Proxy.HasGenericParameters)
+                if (ClassWeaver.ProxyType.HasGenericParameters)
                 {
-                    var genericProxyType = Proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray());
+                    var genericProxyType = ClassWeaver.ProxyType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
                     methodInfoField = methodInfoField.Bind(genericProxyType);
-                    methodDeclaringType = Source.MakeGenericInstanceType(Proxy.GenericParameters.ToArray());
+                    methodDeclaringType = ClassWeaver.SourceType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
                 }
 
                 var methodSignature = Method.GenerateSignature();
-                var methodFinder = Context.MethodFinder.MakeGenericInstanceType(methodDeclaringType);
-                var findMethod = Context.FindMethod.Bind(methodFinder);
+                var methodFinder = ClassWeaver.Context.MethodFinder.MakeGenericInstanceType(methodDeclaringType);
+                var findMethod = ClassWeaver.Context.FindMethod.Bind(methodFinder);
 
                 // Store MethodInfo into the static field
                 il.Emit(OpCodes.Ldstr, methodSignature);
@@ -108,8 +104,8 @@ namespace SexyProxy.Fody
             // * The method's return type is anything else      (Represented by Func<T>)
             SetUpTypes();
 
-            var proceed = new MethodDefinition("Proceed", MethodAttributes.Public | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(Proxy));
-            proceed.Parameters.Add(new ParameterDefinition(Context.InvocationType));
+            var proceed = new MethodDefinition("Proceed", MethodAttributes.Public | MethodAttributes.Static, ProceedReturnType.ResolveGenericParameter(ClassWeaver.ProxyType));
+            proceed.Parameters.Add(new ParameterDefinition(ClassWeaver.Context.InvocationType));
             proceed.Body = new MethodBody(proceed);
             proceed.Body.InitLocals = true;
             ProceedClass.Methods.Add(proceed);
@@ -119,7 +115,7 @@ namespace SexyProxy.Fody
 
             if (ProceedClass.HasGenericParameters)
             {
-                proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(Proxy.GenericParameters.Concat(body.Method.GenericParameters).ToArray()));
+                proceedReference = proceed.Bind(proceedClass.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.Concat(body.Method.GenericParameters).ToArray()));
             }
 
             proceed.Body.Emit(il =>
@@ -181,7 +177,7 @@ namespace SexyProxy.Fody
         {
             var parameterInfos = Method.Parameters;
             il.Emit(OpCodes.Ldc_I4, size);                          // Array length
-            il.Emit(OpCodes.Newarr, Context.ModuleDefinition.TypeSystem.Object);    // Instantiate array
+            il.Emit(OpCodes.Newarr, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);    // Instantiate array
             for (var i = 0; i < parameterInfos.Count; i++)
             {
                 il.Emit(OpCodes.Dup);                               // Duplicate array
@@ -191,7 +187,7 @@ namespace SexyProxy.Fody
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)
                     il.Emit(OpCodes.Box, parameterInfos[i].ParameterType);
 
-                il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
+                il.Emit(OpCodes.Stelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
             }            
         }
 
@@ -203,17 +199,17 @@ namespace SexyProxy.Fody
         protected void EmitProxyFromProceed(ILProcessor il)
         {
             il.Emit(OpCodes.Ldarg_0);                    // Load "this"
-            il.Emit(OpCodes.Call, Context.InvocationGetProxy);
+            il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetProxy);
 
             il.Emit(OpCodes.Castclass, GetProxyTypeReference());
         }
 
         protected TypeReference GetProxyTypeReference()
         {
-            TypeReference proxy = Proxy;
+            TypeReference proxy = ClassWeaver.ProxyType;
             if (proxy.HasGenericParameters)
             {
-                proxy = proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray());
+                proxy = proxy.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
             }
             return proxy;
         }
@@ -229,9 +225,9 @@ namespace SexyProxy.Fody
             for (int i = 0; i < parameterInfos.Count; i++)
             {
                 il.Emit(OpCodes.Ldarg_0);                                                    // Push array 
-                il.Emit(OpCodes.Call, Context.InvocationGetArguments);                       // invocation.Arguments
+                il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);                       // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
-                il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);     // Get element
+                il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);     // Get element
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
                     il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass));
                 else                                                                         // Otherwise, cast it
@@ -245,47 +241,46 @@ namespace SexyProxy.Fody
             il.Emit(proceedOpCode, genericProceedTargetMethod);
             il.Emit(OpCodes.Ret);                    
         }
- 
 
         private void SetUpTypes()
         {
-            if (Method.ReturnType.CompareTo(Context.ModuleDefinition.TypeSystem.Void))
+            if (Method.ReturnType.CompareTo(ClassWeaver.Context.ModuleDefinition.TypeSystem.Void))
             {
-                ProceedDelegateType = Context.Action1Type.MakeGenericInstanceType(Context.InvocationType);
-                ProceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
-                ProceedReturnType = Context.ModuleDefinition.TypeSystem.Void;
-                InvocationType = Context.VoidInvocationType;
-                InvocationConstructor = Context.VoidInvocationConstructor;
-                InvokeMethod = Context.VoidInvokeMethod;
+                ProceedDelegateType = ClassWeaver.Context.Action1Type.MakeGenericInstanceType(ClassWeaver.Context.InvocationType);
+                ProceedDelegateTypeConstructor = ClassWeaver.Context.Action1Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
+                ProceedReturnType = ClassWeaver.Context.ModuleDefinition.TypeSystem.Void;
+                InvocationType = ClassWeaver.Context.VoidInvocationType;
+                InvocationConstructor = ClassWeaver.Context.VoidInvocationConstructor;
+                InvokeMethod = ClassWeaver.Context.VoidInvokeMethod;
             }
             else
             {
-                ProceedDelegateType = Context.Func2Type.MakeGenericInstanceType(Context.InvocationType, Method.ReturnType);
-                ProceedDelegateTypeConstructor = Context.Func2Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
+                ProceedDelegateType = ClassWeaver.Context.Func2Type.MakeGenericInstanceType(ClassWeaver.Context.InvocationType, Method.ReturnType);
+                ProceedDelegateTypeConstructor = ClassWeaver.Context.Func2Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
                 ProceedReturnType = Method.ReturnType;
-                if (!Context.TaskType.IsAssignableFrom(Method.ReturnType))
+                if (!ClassWeaver.Context.TaskType.IsAssignableFrom(Method.ReturnType))
                 {
                     var returnType = Method.ReturnType;
-                    var genericInvocationType = Context.InvocationTType.MakeGenericInstanceType(returnType);
+                    var genericInvocationType = ClassWeaver.Context.InvocationTType.MakeGenericInstanceType(returnType);
                     InvocationType = genericInvocationType;
-                    var unconstructedConstructor = Context.ModuleDefinition.Import(Context.InvocationTType.Resolve().GetConstructors().First());
+                    var unconstructedConstructor = ClassWeaver.Context.ModuleDefinition.Import(ClassWeaver.Context.InvocationTType.Resolve().GetConstructors().First());
                     InvocationConstructor = unconstructedConstructor.Bind(genericInvocationType);
-                    InvokeMethod = Context.InvokeTMethod.MakeGenericMethod(returnType);
+                    InvokeMethod = ClassWeaver.Context.InvokeTMethod.MakeGenericMethod(returnType);
                 }
                 else if (Method.ReturnType.IsTaskT())
                 {
                     var taskTType = Method.ReturnType.GetTaskType();
-                    var genericInvocationType = Context.AsyncInvocationTType.MakeGenericInstanceType(taskTType);
+                    var genericInvocationType = ClassWeaver.Context.AsyncInvocationTType.MakeGenericInstanceType(taskTType);
                     InvocationType = genericInvocationType;
-                    var unconstructedConstructor = Context.ModuleDefinition.Import(Context.AsyncInvocationTType.Resolve().GetConstructors().First());
+                    var unconstructedConstructor = ClassWeaver.Context.ModuleDefinition.Import(ClassWeaver.Context.AsyncInvocationTType.Resolve().GetConstructors().First());
                     InvocationConstructor = unconstructedConstructor.Bind(genericInvocationType);
-                    InvokeMethod = Context.AsyncInvokeTMethod.MakeGenericMethod(taskTType);
+                    InvokeMethod = ClassWeaver.Context.AsyncInvokeTMethod.MakeGenericMethod(taskTType);
                 }
                 else
                 {
-                    InvocationType = Context.VoidAsyncInvocationType;
-                    InvocationConstructor = Context.VoidAsyncInvocationConstructor;
-                    InvokeMethod = Context.AsyncVoidInvokeMethod;
+                    InvocationType = ClassWeaver.Context.VoidAsyncInvocationType;
+                    InvocationConstructor = ClassWeaver.Context.VoidAsyncInvocationConstructor;
+                    InvokeMethod = ClassWeaver.Context.AsyncVoidInvokeMethod;
                 }
             }            
         }                

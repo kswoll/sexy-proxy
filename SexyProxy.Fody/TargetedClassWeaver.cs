@@ -10,6 +10,7 @@ namespace SexyProxy.Fody
     {
         public FieldReference Target { get; private set; }
         public FieldDefinition InvocationHandler { get; private set; }
+        public abstract MethodAttributes GetMethodAttributes(MethodDefinition methodInfo);
 
         protected TargetedClassWeaver(WeaverContext context, TypeDefinition sourceType) : base(context, sourceType)
         {
@@ -108,29 +109,29 @@ namespace SexyProxy.Fody
 
         protected abstract class TargetedMethodWeaver : MethodWeaver
         {
-            protected abstract MethodAttributes GetMethodAttributes();
-
-            protected readonly FieldReference target;
+            public new TargetedClassWeaver ClassWeaver { get; }
             protected readonly FieldDefinition invocationHandler;
+            protected FieldReference target;
 
-            protected TargetedMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(context, source, proxy, method, name, staticConstructor)
+            protected TargetedMethodWeaver(TargetedClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor, FieldReference target, FieldDefinition invocationHandler) : base(classWeaver, method, name, staticConstructor)
             {
-                this.target = target;
-                if (Proxy.GenericParameters.Any())
-                    this.target = target.Bind(proxy.MakeGenericInstanceType(Proxy.GenericParameters.ToArray()));
+                ClassWeaver = classWeaver;
+                this.target = classWeaver.Target;
+                if (classWeaver.ProxyType.GenericParameters.Any())
+                    this.target = target.Bind(classWeaver.ProxyType.MakeGenericInstanceType(classWeaver.ProxyType.GenericParameters.ToArray()));
 
                 this.invocationHandler = invocationHandler;
             }
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-                MethodAttributes methodAttributes = GetMethodAttributes();
+                MethodAttributes methodAttributes = ClassWeaver.GetMethodAttributes(Method);
 
                 // Define the actual method
-                var method = new MethodDefinition(Method.Name, methodAttributes, Method.ReturnType.ResolveGenericParameter(Proxy));
+                var method = new MethodDefinition(Method.Name, methodAttributes, Method.ReturnType.ResolveGenericParameter(ClassWeaver.ProxyType));
                 Method.CopyParameters(method);
                 Method.CopyGenericParameters(method);
-                Proxy.Methods.Add(method);
+                ClassWeaver.ProxyType.Methods.Add(method);
 
                 method.Body = new MethodBody(method);
 

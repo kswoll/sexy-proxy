@@ -15,7 +15,7 @@ namespace SexyProxy.Fody
 
         protected override MethodWeaver CreateMethodWeaver(MethodDefinition methodInfo, string name)
         {
-            return new ReverseProxyMethodWeaver(Context, SourceType, ProxyType, methodInfo, name, StaticConstructor);
+            return new ReverseProxyMethodWeaver(this, methodInfo, name, StaticConstructor);
         }
 
         protected override void Finish()
@@ -51,7 +51,7 @@ namespace SexyProxy.Fody
 
         protected class ReverseProxyMethodWeaver : MethodWeaver
         {
-            public ReverseProxyMethodWeaver(WeaverContext context, TypeDefinition source, TypeDefinition proxy, MethodDefinition method, string name, MethodDefinition staticConstructor) : base(context, source, proxy, method, name, staticConstructor)
+            public ReverseProxyMethodWeaver(ReverseProxyClassWeaver classWeaver, MethodDefinition method, string name, MethodDefinition staticConstructor) : base(classWeaver, method, name, staticConstructor)
             {
             }
 
@@ -63,7 +63,7 @@ namespace SexyProxy.Fody
             protected override void EmitInvocationHandler(ILProcessor il)
             {
                 il.Emit(OpCodes.Ldarg_0);
-                il.Emit(OpCodes.Callvirt, Context.ReverseProxyGetInvocationHandlerMethod);
+                il.Emit(OpCodes.Callvirt, ClassWeaver.Context.ReverseProxyGetInvocationHandlerMethod);
             }
 
             protected override void EmitProceedTarget(ILProcessor il)
@@ -84,7 +84,7 @@ namespace SexyProxy.Fody
                     Method.Body.InitLocals = true;
 
                     // First declare the invocation in a private local variable
-                    var invocation = new VariableDefinition(Context.InvocationType);
+                    var invocation = new VariableDefinition(ClassWeaver.Context.InvocationType);
                     var instructions = Method.Body.Instructions.ToList();
                     Method.Body.Instructions.Clear();
                     Method.Body.Variables.Add(invocation);
@@ -93,20 +93,20 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Stloc, invocation);
 
                     // Add the invocation to the end of the array
-                    il.Emit(OpCodes.Call, Context.InvocationGetArguments);  // Array now on the stack with the invocation above it
+                    il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);  // Array now on the stack with the invocation above it
                     il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);       // Array index
                     il.Emit(OpCodes.Ldloc, invocation);                     // Element value
-                    il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
+                    il.Emit(OpCodes.Stelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
 
                     // Special instrumentation for async methods
                     var returnType = Method.ReturnType;
-                    if (Context.TaskType.IsAssignableFrom(returnType))
+                    if (ClassWeaver.Context.TaskType.IsAssignableFrom(returnType))
                     {
                         // If the return type is Task<T>
                         if (returnType.IsTaskT())
                         {
                             var actualReturnType = returnType.GetTaskType();
-                            var expectedAsyncBuilder = Context.AsyncTaskMethodBuilder.MakeGenericInstanceType(actualReturnType);
+                            var expectedAsyncBuilder = ClassWeaver.Context.AsyncTaskMethodBuilder.MakeGenericInstanceType(actualReturnType);
 
                             // Now find the call to .Start() (only will be found if we're async)
                             var startInstructionMethod = (GenericInstanceMethod)instructions
@@ -166,7 +166,7 @@ namespace SexyProxy.Fody
             private FieldDefinition InstrumentAsyncType(TypeReference asyncType)
             {
                 var asyncTypeDefinition = asyncType.Resolve();
-                var invocationField = new FieldDefinition("$invocation", FieldAttributes.Public, Context.InvocationType);
+                var invocationField = new FieldDefinition("$invocation", FieldAttributes.Public, ClassWeaver.Context.InvocationType);
                 asyncTypeDefinition.Fields.Add(invocationField);
 
                 var moveNext = asyncTypeDefinition.Methods.Single(x => x.Name == "MoveNext");
@@ -197,13 +197,13 @@ namespace SexyProxy.Fody
                 {
                     // Load handler (consumed by call to invokeMethod near the end)
                     EmitProxyFromProceed(il);
-                    il.Emit(OpCodes.Callvirt, Context.ReverseProxyGetInvocationHandlerMethod);
+                    il.Emit(OpCodes.Callvirt, ClassWeaver.Context.ReverseProxyGetInvocationHandlerMethod);
 
                     // Put Invocation onto the stack
                     il.Emit(OpCodes.Ldarg_0);                                                   // invocation
-                    il.Emit(OpCodes.Call, Context.InvocationGetArguments);                      // .Arguments
+                    il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);                      // .Arguments
                     il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);                           // Array index
-                    il.Emit(OpCodes.Ldelem_Any, Context.ModuleDefinition.TypeSystem.Object);    // Load element
+                    il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);    // Load element
                     il.Emit(OpCodes.Castclass, InvocationType);                                 // Cast it into specific invocation subclass
 
                     // Invoke handler
@@ -216,7 +216,7 @@ namespace SexyProxy.Fody
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-                if (Method.ReturnType.CompareTo(Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
+                if (Method.ReturnType.CompareTo(ClassWeaver.Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
                     return;
 
                 if (Method.IsAbstract)
