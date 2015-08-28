@@ -21,7 +21,7 @@ namespace SexyProxy.Fody
         {
             ProxyType.IsAbstract = false;
 
-            // Ensure constructor is public
+            // Ensure constructor is public (since it might be abstract with a protected constructor)
             ProxyType.GetConstructors().Single(x => !x.IsStatic).IsPublic = true;
 
             base.Finish();

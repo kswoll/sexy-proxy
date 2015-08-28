@@ -94,7 +94,7 @@ namespace SexyProxy.Fody
 
                     // Add the invocation to the end of the array
                     il.Emit(OpCodes.Call, Context.InvocationGetArguments);  // Array now on the stack with the invocation above it
-                    il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);   // Array index
+                    il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);       // Array index
                     il.Emit(OpCodes.Ldloc, invocation);                     // Element value
                     il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
 

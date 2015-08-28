@@ -189,7 +189,7 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldarg, (short)(i + 1));             // Element value
 
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)
-                    il.Emit(OpCodes.Box, Context.ModuleDefinition.Import(parameterInfos[i].ParameterType));
+                    il.Emit(OpCodes.Box, parameterInfos[i].ParameterType);
 
                 il.Emit(OpCodes.Stelem_Any, Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
             }            
@@ -253,7 +253,7 @@ namespace SexyProxy.Fody
             {
                 ProceedDelegateType = Context.Action1Type.MakeGenericInstanceType(Context.InvocationType);
                 ProceedDelegateTypeConstructor = Context.Action1Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
-                ProceedReturnType = Context.ModuleDefinition.Import(typeof(void));
+                ProceedReturnType = Context.ModuleDefinition.TypeSystem.Void;
                 InvocationType = Context.VoidInvocationType;
                 InvocationConstructor = Context.VoidInvocationConstructor;
                 InvokeMethod = Context.VoidInvokeMethod;
@@ -262,17 +262,15 @@ namespace SexyProxy.Fody
             {
                 ProceedDelegateType = Context.Func2Type.MakeGenericInstanceType(Context.InvocationType, Method.ReturnType);
                 ProceedDelegateTypeConstructor = Context.Func2Type.Resolve().GetConstructors().First().Bind(ProceedDelegateType);
-                ProceedReturnType = Context.ModuleDefinition.Import(Method.ReturnType);
+                ProceedReturnType = Method.ReturnType;
                 if (!Context.TaskType.IsAssignableFrom(Method.ReturnType))
                 {
-                    // !!! This WAS the cause of the error not finding InvocationHandler type since IProxy.InvocationHandler hadn't been ignored yet and we're not importing the return type
-                    // Create some unit tests that return custom types from a separate assembly
-                    var returnType = Context.ModuleDefinition.Import(Method.ReturnType);
+                    var returnType = Method.ReturnType;
                     var genericInvocationType = Context.InvocationTType.MakeGenericInstanceType(returnType);
                     InvocationType = genericInvocationType;
                     var unconstructedConstructor = Context.ModuleDefinition.Import(Context.InvocationTType.Resolve().GetConstructors().First());
-                    InvocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(genericInvocationType));
-                    InvokeMethod = Context.ModuleDefinition.Import(Context.InvokeTMethod.MakeGenericMethod(returnType));
+                    InvocationConstructor = unconstructedConstructor.Bind(genericInvocationType);
+                    InvokeMethod = Context.InvokeTMethod.MakeGenericMethod(returnType);
                 }
                 else if (Method.ReturnType.IsTaskT())
                 {
@@ -280,8 +278,8 @@ namespace SexyProxy.Fody
                     var genericInvocationType = Context.AsyncInvocationTType.MakeGenericInstanceType(taskTType);
                     InvocationType = genericInvocationType;
                     var unconstructedConstructor = Context.ModuleDefinition.Import(Context.AsyncInvocationTType.Resolve().GetConstructors().First());
-                    InvocationConstructor = Context.ModuleDefinition.Import(unconstructedConstructor.Bind(genericInvocationType));
-                    InvokeMethod = Context.ModuleDefinition.Import(Context.AsyncInvokeTMethod.MakeGenericMethod(taskTType));
+                    InvocationConstructor = unconstructedConstructor.Bind(genericInvocationType);
+                    InvokeMethod = Context.AsyncInvokeTMethod.MakeGenericMethod(taskTType);
                 }
                 else
                 {
