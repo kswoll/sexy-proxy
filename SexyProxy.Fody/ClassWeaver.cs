@@ -29,7 +29,7 @@ namespace SexyProxy.Fody
 
         protected virtual IEnumerable<MethodDefinition> GetMethods()
         {
-            var methods = SourceType.Methods.Where(x => !x.IsStatic);
+            var methods = SourceType.Methods.Where(x => !x.IsStatic && !x.IsConstructor);
             return methods;
         }
 

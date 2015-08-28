@@ -17,7 +17,7 @@ namespace SexyProxy.Fody
 
         protected override IEnumerable<MethodDefinition> GetMethods()
         {
-            var methods = SourceType.Methods.Where(x => !x.IsStatic && x.IsVirtual);
+            var methods = SourceType.Methods.Where(x => !x.IsStatic && x.IsVirtual && !x.IsConstructor);
             return methods;
         }
 
