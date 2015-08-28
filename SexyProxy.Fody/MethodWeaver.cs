@@ -42,15 +42,17 @@ namespace SexyProxy.Fody
         public void DefineProxy()
         {
             var name = Name + "$Proceed";
-            if (Proxy.GenericParameters.Count > 0 || Method.GenericParameters.Count > 0)
-                name += "`" + (Proxy.GenericParameters.Count + Method.GenericParameters.Count);
+            var arity = Proxy.GenericParameters.Count + Method.GenericParameters.Count;
+            if (arity > 0)
+            {
+                name += "`" + arity;
+            }
             ProceedClass = new TypeDefinition(Proxy.Namespace, name, TypeAttributes.NestedPrivate, Context.ObjectType);
             Proxy.CopyGenericParameters(ProceedClass);
             Method.CopyGenericParameters(ProceedClass);
 
             var proceedMethodTarget = GetProceedMethodTarget();
 
-            Context.LogInfo($"{proceedMethodTarget}");
             ProxyMethod(Method.Body, proceedMethodTarget);
 
             Proxy.NestedTypes.Add(ProceedClass);

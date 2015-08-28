@@ -29,7 +29,7 @@ namespace SexyProxy.Fody
 
         protected virtual IEnumerable<MethodDefinition> GetMethods()
         {
-            var methods = SourceType.Methods.Where(x => !x.IsStatic && !x.IsConstructor);
+            var methods = SourceType.Methods.Where(x => !x.IsStatic);
             return methods;
         }
 
@@ -58,6 +58,7 @@ namespace SexyProxy.Fody
                 if (methodInfo.IsConstructor)
                     continue;
 
+                // Generate a unique name for the method in the event of overloads.  
                 var name = methodInfo.Name;
                 int index;
                 if (uniqueNames.TryGetValue(name, out index))

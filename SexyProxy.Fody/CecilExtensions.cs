@@ -247,7 +247,6 @@ namespace SexyProxy.Fody
             var parameterTypes = method.Parameters.Select(info => info.ParameterType).ToArray();
 
             // The type we want to invoke GetMethod upon
-            LogInfo($"{declaringType}");
             il.LoadType(declaringType);
 
             // Arg1: methodName
