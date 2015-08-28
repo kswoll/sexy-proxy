@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
@@ -17,14 +18,27 @@ namespace SexyProxy.Reflection
             }
         }
 
+        public static string GetFriendlyName(Type type)
+        {
+            if (type.FullName == null)
+                return type.Name;
+            if (type.IsGenericType)
+                return string.Format("{0}<{1}>", type.FullName.Split('[')[0], string.Join(", ", type.GetGenericArguments().Select(x => GetFriendlyName(x))));
+            else
+                return type.FullName;
+        }
+
         private static string GenerateSignature(MethodInfo method)
         {
             return $"{method.Name}$$${method.GetGenericArguments().Length}$$$" +
-                   $"{string.Join("$$", method.GetParameters().Select(x => (x.ParameterType.FullName ?? x.ParameterType.Name).Replace(".", "$")))}";
+                   $"{string.Join("$$", method.GetParameters().Select(x => GetFriendlyName(x.ParameterType).Replace(".", "$")))}";
         }
 
         public static MethodInfo FindMethod(string signature)
         {
+            MethodInfo method;
+            if (!methodsBySignature.TryGetValue(signature, out method))
+                throw new Exception("Could not find method with signature: " + signature);
             return methodsBySignature[signature];
         }
     }

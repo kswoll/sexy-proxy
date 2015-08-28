@@ -96,7 +96,7 @@ namespace SexyProxy.Fody
                 else
                 {
                     // Transplant the original method into a new one that can be invoked when calling proceed
-                    var originalMethod = new MethodDefinition(Method.GenerateSignature() + "$Original", MethodAttributes.Private, Method.ReturnType);
+                    var originalMethod = new MethodDefinition(Name + "$Original", MethodAttributes.Private, Method.ReturnType);
                     Method.CopyParameters(originalMethod);
                     Method.CopyGenericParameters(originalMethod);
                     originalMethod.Body = new MethodBody(originalMethod);
