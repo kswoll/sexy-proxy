@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Remoting.Contexts;
 using System.Threading.Tasks;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using MethodAttributes = Mono.Cecil.MethodAttributes;
 using MethodBody = Mono.Cecil.Cil.MethodBody;
 
 namespace SexyProxy.Fody
@@ -465,6 +467,14 @@ namespace SexyProxy.Fody
                     destination.GenericParameters.Add(newGenericParameter);
                 }
             }
+        }
+
+        public static MethodDefinition CreateStaticConstructor(TypeDefinition proxyType)
+        {
+            var constructor = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, ModuleDefinition.TypeSystem.Void);
+            constructor.Body = new MethodBody(constructor);
+            proxyType.Methods.Add(constructor);
+            return constructor;
         }
 
 /*
