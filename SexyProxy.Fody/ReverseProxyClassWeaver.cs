@@ -38,9 +38,7 @@ namespace SexyProxy.Fody
             var staticConstructor = ProxyType.GetStaticConstructor();
             if (staticConstructor == null)
             {
-                staticConstructor = new MethodDefinition(".cctor", MethodAttributes.Static | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Context.ModuleDefinition.TypeSystem.Void);
-                staticConstructor.Body = new MethodBody(staticConstructor);
-                ProxyType.Methods.Add(staticConstructor);
+                staticConstructor = CecilExtensions.CreateStaticConstructor(ProxyType);
             }
             else
             {
