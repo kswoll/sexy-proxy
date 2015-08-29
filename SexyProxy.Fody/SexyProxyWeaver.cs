@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
@@ -32,10 +33,17 @@ namespace SexyProxy.Fody
             var proxyAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyAttribute", sexyProxy);
             if (proxyAttribute == null)
                 throw new Exception($"{nameof(proxyAttribute)} is null");
+            var proxyForAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyForAttribute", sexyProxy);
             var reverseProxyInterface = ModuleDefinition.FindType("SexyProxy", "IReverseProxy", sexyProxy);
             var proxyInterface = ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy);
 
             var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || reverseProxyInterface.IsAssignableFrom(x) || proxyInterface.IsAssignableFrom(x)).ToArray();
+
+            // Get external proxy references
+//            Debugger.Launch();
+            var proxyFors = ModuleDefinition.Assembly.GetCustomAttributes(proxyForAttribute).Select(x => (TypeReference)x.ConstructorArguments.Single().Value).Select(x => x.Resolve()).ToArray();
+            targetTypes = targetTypes.Concat(proxyFors).ToArray();
+
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
 
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));
@@ -102,6 +110,7 @@ namespace SexyProxy.Fody
                 LogInfo($"Emitting proxy for {sourceType.FullName}");
                 ClassWeaver classWeaver;
 
+//                Debugger.Launch();
                 if (sourceType.IsInterface)
                     classWeaver = new InterfaceClassWeaver(context, sourceType);
                 else if (proxyInterface.IsAssignableFrom(sourceType))

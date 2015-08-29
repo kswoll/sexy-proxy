@@ -58,8 +58,8 @@ namespace SexyProxy.Fody
         {
             MethodReference result = Method;
             if (ClassWeaver.SourceType.HasGenericParameters)
-                result = Method.Bind(ClassWeaver.SourceType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray()));
-            return result;
+                result = Method.Bind(ClassWeaver.SourceTypeReference.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray()));
+            return Import(result);
         }
 
         protected virtual void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
@@ -70,7 +70,7 @@ namespace SexyProxy.Fody
             FieldReference methodInfoField = methodInfoFieldDefinition;
             StaticConstructor.Body.Emit(il =>
             {
-                TypeReference methodDeclaringType = Method.DeclaringType;
+                TypeReference methodDeclaringType = Import(Method.DeclaringType);
                 if (ClassWeaver.ProxyType.HasGenericParameters)
                 {
                     var genericProxyType = ClassWeaver.ProxyType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
@@ -185,7 +185,7 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Ldarg, (short)(i + 1));             // Element value
 
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter)
-                    il.Emit(OpCodes.Box, parameterInfos[i].ParameterType);
+                    il.Emit(OpCodes.Box, Import(parameterInfos[i].ParameterType));
 
                 il.Emit(OpCodes.Stelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
             }            
@@ -214,6 +214,19 @@ namespace SexyProxy.Fody
             return proxy;
         }
 
+        protected TypeReference Import(TypeReference type)
+        {
+            if (type.IsGenericParameter)
+                return type;
+            else
+                return ClassWeaver.Context.ModuleDefinition.Import(type);
+        }
+
+        protected MethodReference Import(MethodReference method)
+        {
+            return ClassWeaver.Context.ModuleDefinition.Import(method);
+        }
+
         protected virtual void ImplementProceed(MethodDefinition methodInfo, MethodBody methodBody, ILProcessor il, FieldReference methodInfoField, MethodReference proceed, Action<ILProcessor> emitProceedTarget, MethodReference proceedTargetMethod, OpCode proceedOpCode)
         {
             var parameterInfos = methodInfo.Parameters;
@@ -225,13 +238,14 @@ namespace SexyProxy.Fody
             for (int i = 0; i < parameterInfos.Count; i++)
             {
                 il.Emit(OpCodes.Ldarg_0);                                                    // Push array 
-                il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);                       // invocation.Arguments
+                il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);           // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);     // Get element
+                ClassWeaver.Context.LogInfo($"{parameterInfos[i].ParameterType}");
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
-                    il.Emit(OpCodes.Unbox_Any, parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass));
+                    il.Emit(OpCodes.Unbox_Any, Import(parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass)));
                 else                                                                         // Otherwise, cast it
-                    il.Emit(OpCodes.Castclass, parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass));
+                    il.Emit(OpCodes.Castclass, Import(parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass)));
             }
 
             var genericProceedTargetMethod = proceedTargetMethod;

@@ -1,0 +1,4 @@
+C:\dev\sexy-proxy\SexyProxy.Tests.ExternalLibrary\bin\Debug\SexyProxy.Tests.ExternalLibrary.dll
+C:\dev\sexy-proxy\SexyProxy.Tests.ExternalLibrary\bin\Debug\SexyProxy.Tests.ExternalLibrary.pdb
+C:\dev\sexy-proxy\SexyProxy.Tests.ExternalLibrary\obj\Debug\SexyProxy.Tests.ExternalLibrary.dll
+C:\dev\sexy-proxy\SexyProxy.Tests.ExternalLibrary\obj\Debug\SexyProxy.Tests.ExternalLibrary.pdb

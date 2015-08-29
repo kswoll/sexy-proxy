@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractMethodTests.cs" />
+    <Compile Include="ExternalLibraryTests.cs" />
     <Compile Include="GenericsTests.cs" />
     <Compile Include="HandWritten.cs" />
     <Compile Include="HandWrittenBaseNoTargetDynamicProxyTests.cs" />
@@ -69,6 +70,10 @@
     <ProjectReference Include="..\SexyProxy.Net45\SexyProxy.Net45.csproj">
       <Project>{b1b59f56-bc70-42d6-a7b4-9a631912979f}</Project>
       <Name>SexyProxy.Net45</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj">
+      <Project>{1CABBB15-9965-4E2D-A6F2-5B1D639EAF01}</Project>
+      <Name>SexyProxy.Tests.ExternalLibrary</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

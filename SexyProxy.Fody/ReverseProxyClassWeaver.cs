@@ -84,11 +84,11 @@ namespace SexyProxy.Fody
                     // First declare the invocation in a private local variable
                     var invocation = new VariableDefinition(ClassWeaver.Context.InvocationType);
                     var instructions = Method.Body.Instructions.ToList();
-                    Method.Body.Instructions.Clear();
-                    Method.Body.Variables.Add(invocation);
-                    EmitInvocation(il, methodInfoField, proceed);
+                    Method.Body.Instructions.Clear();                   // Wipe out the existing instructions for the method
+                    Method.Body.Variables.Add(invocation);              // Add a variable to store the invocation
+                    EmitInvocation(il, methodInfoField, proceed);       // Put the invocation on the stack
                     il.Emit(OpCodes.Dup);                               // Duplicate invocation for below
-                    il.Emit(OpCodes.Stloc, invocation);
+                    il.Emit(OpCodes.Stloc, invocation);                 // Store the invocation in the variable declared (just) earlier
 
                     // Add the invocation to the end of the array
                     il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);  // Array now on the stack with the invocation above it
@@ -199,7 +199,7 @@ namespace SexyProxy.Fody
 
                     // Put Invocation onto the stack
                     il.Emit(OpCodes.Ldarg_0);                                                   // invocation
-                    il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);                      // .Arguments
+                    il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);          // .Arguments
                     il.Emit(OpCodes.Ldc_I4, Method.Parameters.Count);                           // Array index
                     il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);    // Load element
                     il.Emit(OpCodes.Castclass, InvocationType);                                 // Cast it into specific invocation subclass

@@ -114,6 +114,28 @@ namespace SexyProxy.Fody
             return result;
         }
 
+        public static bool IsDefined(this AssemblyDefinition assembly, TypeReference attributeType)
+        {
+            var typeIsDefined = assembly.HasCustomAttributes && assembly.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
+            return typeIsDefined;            
+        }
+
+        public static IEnumerable<CustomAttribute> GetCustomAttributes(this AssemblyDefinition assembly, TypeReference attributeType)
+        {
+            return assembly.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
+        }
+
+        public static bool IsDefined(this ModuleDefinition module, TypeReference attributeType)
+        {
+            var typeIsDefined = module.HasCustomAttributes && module.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
+            return typeIsDefined;            
+        }
+
+        public static IEnumerable<CustomAttribute> GetCustomAttributes(this ModuleDefinition module, TypeReference attributeType)
+        {
+            return module.CustomAttributes.Where(x => x.AttributeType.FullName == attributeType.FullName);
+        }
+
         public static bool IsDefined(this IMemberDefinition member, TypeReference attributeType, bool inherit = false)
         {
             var typeIsDefined = member.HasCustomAttributes && member.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
@@ -138,7 +160,7 @@ namespace SexyProxy.Fody
             reference.CallingConvention = method.CallingConvention;
 
             foreach (var parameter in method.Parameters)
-                reference.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
+                reference.Parameters.Add(new ParameterDefinition(ModuleDefinition.Import(parameter.ParameterType)));
 
             return reference;
         }

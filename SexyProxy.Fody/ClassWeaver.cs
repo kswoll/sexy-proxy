@@ -13,6 +13,7 @@ namespace SexyProxy.Fody
 
         public WeaverContext Context { get; }
         public TypeDefinition SourceType { get; }
+        public TypeReference SourceTypeReference { get; }
         public TypeDefinition ProxyType { get; private set; }
         public IEnumerable<MethodDefinition> Methods { get; private set; }
         public MethodDefinition StaticConstructor { get; private set; }
@@ -21,6 +22,7 @@ namespace SexyProxy.Fody
         {
             Context = context;
             SourceType = sourceType;
+            SourceTypeReference = context.ModuleDefinition.Import(sourceType);
         }
 
         protected virtual void InitializeProxyType()

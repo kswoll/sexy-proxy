@@ -25,7 +25,7 @@ namespace SexyProxy.Fody
         }
 
         protected override TypeReference GetBaseType(GenericParameter[] genericParameters) => Context.ObjectType;
-        protected override TypeReference[] GetInterfaces(GenericParameter[] genericParameters) => new[] { !SourceType.HasGenericParameters ? (TypeReference)SourceType : SourceType.MakeGenericInstanceType(genericParameters) };
+        protected override TypeReference[] GetInterfaces(GenericParameter[] genericParameters) => new[] { !SourceType.HasGenericParameters ? Context.ModuleDefinition.Import(SourceType) : Context.ModuleDefinition.Import(SourceType).MakeGenericInstanceType(genericParameters) };
         protected override TypeReference GetSourceType() => GetInterfaces(ProxyType.GenericParameters.ToArray())[0];
 
         protected override IEnumerable<MethodDefinition> GetMethods()

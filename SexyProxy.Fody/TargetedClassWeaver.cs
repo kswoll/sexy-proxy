@@ -22,7 +22,7 @@ namespace SexyProxy.Fody
             return methods;
         }
 
-        protected virtual TypeReference GetBaseType(GenericParameter[] genericParameters) => !SourceType.HasGenericParameters ? (TypeReference)SourceType : SourceType.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
+        protected virtual TypeReference GetBaseType(GenericParameter[] genericParameters) => !SourceType.HasGenericParameters ? SourceTypeReference : SourceTypeReference.MakeGenericInstanceType(ProxyType.GenericParameters.ToArray());
 
         protected virtual TypeReference[] GetInterfaces(GenericParameter[] genericParameters)
         {
@@ -52,7 +52,7 @@ namespace SexyProxy.Fody
         {
             base.InitializeProxyType();
 
-            var targetDefinition = new FieldDefinition("$target", FieldAttributes.Private, GetSourceType());
+            var targetDefinition = new FieldDefinition("$target", FieldAttributes.Private, Context.ModuleDefinition.Import(GetSourceType()));
             ProxyType.Fields.Add(targetDefinition);
             Target = targetDefinition;
 
@@ -67,7 +67,7 @@ namespace SexyProxy.Fody
         {
             // Create constructor 
             var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Context.ModuleDefinition.TypeSystem.Void);
-            constructorWithTarget.Parameters.Add(new ParameterDefinition(GetSourceType()));
+            constructorWithTarget.Parameters.Add(new ParameterDefinition(Context.ModuleDefinition.Import(GetSourceType())));
             constructorWithTarget.Parameters.Add(new ParameterDefinition(Context.InvocationHandlerType));
             ProxyType.Methods.Add(constructorWithTarget);
             constructorWithTarget.Body = new MethodBody(constructorWithTarget);
