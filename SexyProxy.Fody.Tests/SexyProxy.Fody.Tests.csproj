@@ -49,6 +49,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AbstractMethodTests.cs" />
+    <Compile Include="DoNotProxyTests.cs" />
     <Compile Include="ExternalLibraryTests.cs" />
     <Compile Include="GenericsTests.cs" />
     <Compile Include="HandWritten.cs" />

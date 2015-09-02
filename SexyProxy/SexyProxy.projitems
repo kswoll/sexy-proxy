@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)AsyncInvocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DoNotProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FodyProxyTypeFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvalidAsyncException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Invocation.cs" />

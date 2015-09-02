@@ -48,6 +48,11 @@ namespace SexyProxy.Fody
 
             // Now implement/override all methods
             var uniqueNames = new Dictionary<string, int>();
+            var propertiesByAccessor = SourceType.Properties
+                .Select(x => new { Property = x, Accessor = x.GetMethod })
+                .Concat(SourceType.Properties.Select(x => new { Property = x, Accessor = x.SetMethod }))
+                .Where(x => x.Accessor != null)
+                .ToDictionary(x => x.Accessor, x => x.Property);
 
             // Now implement/override all methods
             foreach (var methodInfo in Methods.ToArray())
@@ -58,6 +63,10 @@ namespace SexyProxy.Fody
                 if (methodInfo.Name == "Finalize" && parameterInfos.Count == 0 && methodInfo.DeclaringType.CompareTo(Context.ModuleDefinition.TypeSystem.Object.Resolve()))
                     continue;
                 if (methodInfo.IsConstructor)
+                    continue;
+                if ((methodInfo.IsGetter || methodInfo.IsSetter) && propertiesByAccessor[methodInfo].IsDefined(Context.DoNotProxyAttribute))
+                    continue;
+                if (!methodInfo.IsGetter && !methodInfo.IsSetter && methodInfo.IsDefined(Context.DoNotProxyAttribute))
                     continue;
 
                 // Generate a unique name for the method in the event of overloads.  

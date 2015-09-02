@@ -241,7 +241,6 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);           // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);     // Get element
-                ClassWeaver.Context.LogInfo($"{parameterInfos[i].ParameterType}");
                 if (parameterInfos[i].ParameterType.IsValueType || parameterInfos[i].ParameterType.IsGenericParameter) // If it's a value type, unbox it
                     il.Emit(OpCodes.Unbox_Any, Import(parameterInfos[i].ParameterType.ResolveGenericParameter(ProceedClass)));
                 else                                                                         // Otherwise, cast it
