@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SexyProxy.Fody.Tests
@@ -22,6 +23,25 @@ namespace SexyProxy.Fody.Tests
         public abstract class BaseClass
         {
             public abstract Task<string> GetAbstractHelloWorld();
+        }
+
+        [Test]
+        public void DoNotMakeNonAbstract()
+        {
+            try
+            {
+                Proxy.CreateProxy<DoNotMakeNonAbstractClass>(invocation => "foo");
+            }
+            catch (MissingMethodException e)
+            {
+            }
+        }
+
+        public abstract class DoNotMakeNonAbstractClass : IProxy, ISetInvocationHandler
+        {
+            public InvocationHandler InvocationHandler { get; set; }
+
+            [DoNotProxy]public abstract void SomeMethod();
         }
     }
 }

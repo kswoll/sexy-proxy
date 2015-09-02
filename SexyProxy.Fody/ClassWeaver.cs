@@ -17,6 +17,7 @@ namespace SexyProxy.Fody
         public TypeDefinition ProxyType { get; private set; }
         public IEnumerable<MethodDefinition> Methods { get; private set; }
         public MethodDefinition StaticConstructor { get; private set; }
+        public bool ContainsAbstractNonProxiedMethod { get; private set; }
 
         protected ClassWeaver(WeaverContext context, TypeDefinition sourceType)
         {
@@ -64,10 +65,13 @@ namespace SexyProxy.Fody
                     continue;
                 if (methodInfo.IsConstructor)
                     continue;
-                if ((methodInfo.IsGetter || methodInfo.IsSetter) && propertiesByAccessor[methodInfo].IsDefined(Context.DoNotProxyAttribute))
+                if (((methodInfo.IsGetter || methodInfo.IsSetter) && propertiesByAccessor[methodInfo].IsDefined(Context.DoNotProxyAttribute)) ||
+                    (!methodInfo.IsGetter && !methodInfo.IsSetter && methodInfo.IsDefined(Context.DoNotProxyAttribute)))
+                {
+                    if (methodInfo.IsAbstract)
+                        ContainsAbstractNonProxiedMethod = true;
                     continue;
-                if (!methodInfo.IsGetter && !methodInfo.IsSetter && methodInfo.IsDefined(Context.DoNotProxyAttribute))
-                    continue;
+                }
 
                 // Generate a unique name for the method in the event of overloads.  
                 var name = methodInfo.Name;
