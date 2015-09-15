@@ -19,6 +19,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)IReverseProxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxyTypeFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISetInvocationHandler.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)OriginalMethodAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Proxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />

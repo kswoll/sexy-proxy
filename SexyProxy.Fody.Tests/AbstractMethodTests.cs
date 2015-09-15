@@ -32,7 +32,7 @@ namespace SexyProxy.Fody.Tests
             {
                 Proxy.CreateProxy<DoNotMakeNonAbstractClass>(invocation => "foo");
             }
-            catch (MissingMethodException e)
+            catch (MissingMethodException)
             {
             }
         }

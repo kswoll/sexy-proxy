@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using NUnit.Framework;
+using SexyProxy.Reflection;
 
 namespace SexyProxy.Fody.Tests
 {
@@ -165,7 +166,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = Proxy.CreateProxy<ClassWithOverloads>(async x => "foo" + await x.Proceed());
             var result = proxy.Method("foo");
-            Assert.AreEqual("foofoofoo", result);                        
+            Assert.AreEqual("foofoofoo2", result);                        
         }
 
         private class ClassWithOverloads : IProxy, ISetInvocationHandler
@@ -174,23 +175,43 @@ namespace SexyProxy.Fody.Tests
 
             public string Method()
             {
-                return "foo";
+                return "foo1";
             }
 
             public string Method(string s)
             {
-                return s + "foo";
+                return s + "foo2";
             }
 
             public string Method<T, U>(T s) 
             {
-                return s + "foo";
+                return s + "foo3";
             }
 
             public string Method<T>(T s)
             {
-                return s + "foo";
+                return s + "foo4";
             }
-        }              
+        }
+
+        [Test]
+        public void OriginalMethodTest()
+        {
+            var obj = new ClassWithOverloads();
+            var methodInfo = typeof(ClassWithOverloads).GetMethods().Single(x => x.Name == "Method" && x.GetParameters().Length == 0);
+            var originalMethod = MethodFinder<ClassWithOverloads>.GetOriginalMethod(methodInfo);
+            var result = originalMethod.Invoke(obj, null);
+            Assert.AreEqual("foo1", result);
+        }
+
+        [Test]
+        public void OriginalMethod2Test()
+        {
+            var obj = new ClassWithOverloads();
+            var methodInfo = typeof(ClassWithOverloads).GetMethods().Single(x => x.Name == "Method" && x.GetParameters().ElementAtOrDefault(0)?.ParameterType == typeof(string));
+            var originalMethod = MethodFinder<ClassWithOverloads>.GetOriginalMethod(methodInfo);
+            var result = originalMethod.Invoke(obj, new[] { "bar" });
+            Assert.AreEqual("barfoo2", result);
+        }
     }
 }

@@ -96,6 +96,7 @@ namespace SexyProxy.Fody
                 {
                     // Transplant the original method into a new one that can be invoked when calling proceed
                     var originalMethod = new MethodDefinition(Name + "$Original", MethodAttributes.Private, Method.ReturnType);
+                    Method.CustomAttributes.Add(new CustomAttribute(ClassWeaver.Context.OriginalMethodAttributeConstructor) { ConstructorArguments = { new CustomAttributeArgument(ClassWeaver.Context.ModuleDefinition.TypeSystem.String, originalMethod.Name) }});
                     Method.CopyParameters(originalMethod);
                     Method.CopyGenericParameters(originalMethod);
                     originalMethod.Body = new MethodBody(originalMethod);

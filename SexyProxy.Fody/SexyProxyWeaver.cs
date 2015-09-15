@@ -35,6 +35,7 @@ namespace SexyProxy.Fody
                 throw new Exception($"{nameof(proxyAttribute)} is null");
             var proxyForAttribute = ModuleDefinition.FindType("SexyProxy", "ProxyForAttribute", sexyProxy);
             var doNotProxyAttribute = ModuleDefinition.FindType("SexyProxy", "DoNotProxyAttribute", sexyProxy);
+            var originalMethodAttributeConstructor = ModuleDefinition.FindConstructor(ModuleDefinition.FindType("SexyProxy", "OriginalMethodAttribute", sexyProxy));
             var reverseProxyInterface = ModuleDefinition.FindType("SexyProxy", "IReverseProxy", sexyProxy);
             var proxyInterface = ModuleDefinition.FindType("SexyProxy", "IProxy", sexyProxy);
 
@@ -104,7 +105,8 @@ namespace SexyProxy.Fody
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
                 MethodFinder = methodFinder,
                 FindMethod = findMethod,
-                DoNotProxyAttribute = doNotProxyAttribute
+                DoNotProxyAttribute = doNotProxyAttribute,
+                OriginalMethodAttributeConstructor = originalMethodAttributeConstructor
             };
 
             foreach (var sourceType in targetTypes)

@@ -8,6 +8,7 @@ namespace SexyProxy.Reflection
     public static class MethodFinder<T>
     {
         private static Dictionary<string, MethodInfo> methodsBySignature = new Dictionary<string, MethodInfo>();
+        private static Dictionary<MethodInfo, MethodInfo> originalMethods = new Dictionary<MethodInfo, MethodInfo>();
 
         static MethodFinder()
         {
@@ -15,7 +16,16 @@ namespace SexyProxy.Reflection
             {
                 var signature = GenerateSignature(method);
                 methodsBySignature[signature] = method;
+
+                var originalMethodName = method.GetCustomAttribute<OriginalMethodAttribute>()?.Name;
+                if (originalMethodName != null)
+                    originalMethods[method] = typeof(T).GetMethod(originalMethodName, BindingFlags.NonPublic | BindingFlags.Instance);
             }
+        }
+
+        public static MethodInfo GetOriginalMethod(MethodInfo method)
+        {
+            return originalMethods[method];
         }
 
         public static string GetFriendlyName(Type type)
