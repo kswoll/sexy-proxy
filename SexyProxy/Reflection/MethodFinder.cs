@@ -1,31 +1,19 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 
 namespace SexyProxy.Reflection
 {
-    public static class MethodFinder<T>
+    public static class MethodFinder
     {
-        private static Dictionary<string, MethodInfo> methodsBySignature = new Dictionary<string, MethodInfo>();
-        private static Dictionary<MethodInfo, MethodInfo> originalMethods = new Dictionary<MethodInfo, MethodInfo>();
+        private static ConcurrentDictionary<MethodInfo, MethodInfo> originalMethods = new ConcurrentDictionary<MethodInfo, MethodInfo>();
 
-        static MethodFinder()
+        internal static string GenerateSignature(MethodInfo method)
         {
-            foreach (var method in typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
-            {
-                var signature = GenerateSignature(method);
-                methodsBySignature[signature] = method;
-
-                var originalMethodName = method.GetCustomAttribute<OriginalMethodAttribute>()?.Name;
-                if (originalMethodName != null)
-                    originalMethods[method] = typeof(T).GetMethod(originalMethodName, BindingFlags.NonPublic | BindingFlags.Instance);
-            }
-        }
-
-        public static MethodInfo GetOriginalMethod(MethodInfo method)
-        {
-            return originalMethods[method];
+            return $"{method.Name}$$${method.GetGenericArguments().Length}$$$" +
+                   $"{string.Join("$$", method.GetParameters().Select(x => GetFriendlyName(x.ParameterType).Replace(".", "$")))}";
         }
 
         public static string GetFriendlyName(Type type)
@@ -38,10 +26,32 @@ namespace SexyProxy.Reflection
                 return type.FullName;
         }
 
-        private static string GenerateSignature(MethodInfo method)
+        public static MethodInfo GetOriginalMethod(MethodInfo method)
         {
-            return $"{method.Name}$$${method.GetGenericArguments().Length}$$$" +
-                   $"{string.Join("$$", method.GetParameters().Select(x => GetFriendlyName(x.ParameterType).Replace(".", "$")))}";
+            return originalMethods.GetOrAdd(method, _ =>
+            {
+                foreach (var current in method.DeclaringType.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+                {
+                    var originalMethodName = current.GetCustomAttribute<OriginalMethodAttribute>()?.Name;
+                    if (originalMethodName != null)
+                        originalMethods[current] = method.DeclaringType.GetMethod(originalMethodName, BindingFlags.NonPublic | BindingFlags.Instance);
+                }
+                return originalMethods[method];
+            });
+        }
+    }
+
+    public static class MethodFinder<T>
+    {
+        private static Dictionary<string, MethodInfo> methodsBySignature = new Dictionary<string, MethodInfo>();
+
+        static MethodFinder()
+        {
+            foreach (var method in typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            {
+                var signature = MethodFinder.GenerateSignature(method);
+                methodsBySignature[signature] = method;
+            }
         }
 
         public static MethodInfo FindMethod(string signature)

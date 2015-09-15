@@ -199,7 +199,7 @@ namespace SexyProxy.Fody.Tests
         {
             var obj = new ClassWithOverloads();
             var methodInfo = typeof(ClassWithOverloads).GetMethods().Single(x => x.Name == "Method" && x.GetParameters().Length == 0);
-            var originalMethod = MethodFinder<ClassWithOverloads>.GetOriginalMethod(methodInfo);
+            var originalMethod = MethodFinder.GetOriginalMethod(methodInfo);
             var result = originalMethod.Invoke(obj, null);
             Assert.AreEqual("foo1", result);
         }
@@ -209,7 +209,7 @@ namespace SexyProxy.Fody.Tests
         {
             var obj = new ClassWithOverloads();
             var methodInfo = typeof(ClassWithOverloads).GetMethods().Single(x => x.Name == "Method" && x.GetParameters().ElementAtOrDefault(0)?.ParameterType == typeof(string));
-            var originalMethod = MethodFinder<ClassWithOverloads>.GetOriginalMethod(methodInfo);
+            var originalMethod = MethodFinder.GetOriginalMethod(methodInfo);
             var result = originalMethod.Invoke(obj, new[] { "bar" });
             Assert.AreEqual("barfoo2", result);
         }
