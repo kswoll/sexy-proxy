@@ -19,13 +19,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Ios", "SexyProxy.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Tests.ExternalLibrary", "SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj", "{1CABBB15-9965-4E2D-A6F2-5B1D639EAF01}"
 EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Sexy.Emit", "projects\sexy-emit\Sexy.Emit\Sexy.Emit.shproj", "{B30CB7CE-B056-4068-AB69-9BF4C51D2B22}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		SexyProxy\SexyProxy.projitems*{b1b59f56-bc70-42d6-a7b4-9a631912979f}*SharedItemsImports = 4
 		SexyProxy.Emit\SexyProxy.Emit.projitems*{b1b59f56-bc70-42d6-a7b4-9a631912979f}*SharedItemsImports = 4
-		projects\sexy-emit\Sexy.Emit\Sexy.Emit.projitems*{b30cb7ce-b056-4068-ab69-9bf4c51d2b22}*SharedItemsImports = 13
 		SexyProxy.Emit\SexyProxy.Emit.projitems*{f474debd-348e-4c78-b54f-273ef5600d41}*SharedItemsImports = 13
 		SexyProxy\SexyProxy.projitems*{e2935d08-affd-4027-a7b4-5cf04c117363}*SharedItemsImports = 13
 	EndGlobalSection
