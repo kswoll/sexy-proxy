@@ -213,5 +213,24 @@ namespace SexyProxy.Fody.Tests
             var result = originalMethod.Invoke(obj, new[] { "bar" });
             Assert.AreEqual("barfoo2", result);
         }
+
+        [Test]
+        public void AnonymousMethodInConstructor()
+        {
+            var proxy = Proxy.CreateProxy<AnonymousMethodInConstructorClass>(async x => "foo" + await x.Proceed());
+        }
+
+        private class AnonymousMethodInConstructorClass : IProxy, ISetInvocationHandler
+        {
+            public InvocationHandler InvocationHandler { get; set; }
+
+            public AnonymousMethodInConstructorClass()
+            {
+                var s = "foo";
+                new string[0].Select(x => Tuple.Create("foo", 5)).Where(x => Foo == "foo");
+            }
+
+            public string Foo { get; set; }
+        }
     }
 }
