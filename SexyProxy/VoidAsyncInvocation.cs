@@ -6,6 +6,8 @@ namespace SexyProxy
 {
     public class VoidAsyncInvocation : Invocation
     {
+        public override InvocationFlags Flags => InvocationFlags.Void | InvocationFlags.Async;
+
         private Func<Invocation, Task> implementation;
 
         public VoidAsyncInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<Invocation, Task> implementation) : base(proxy, invocationHandler, method, arguments)

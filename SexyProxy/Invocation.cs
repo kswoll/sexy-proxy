@@ -12,6 +12,7 @@ namespace SexyProxy
         public object[] Arguments { get; }
 
         public abstract Task<object> Proceed();
+        public abstract InvocationFlags Flags { get; }
 
         protected Invocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments)
         {
@@ -20,10 +21,20 @@ namespace SexyProxy
             Method = method;
             Arguments = arguments;
         }
+
+        /// <summary>
+        /// Convenience method so the parameter to HasFlag is typed to InvocationFlags rather than just Enum.
+        /// </summary>
+        public bool HasFlag(InvocationFlags flag)
+        {
+            return Flags.HasFlag(flag);
+        }
     }
 
     public class InvocationT<T> : Invocation
     {
+        public override InvocationFlags Flags => InvocationFlags.None;
+
         private Func<Invocation, T> implementation;
 
         public InvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<Invocation, T> implementation) : base(proxy, invocationHandler, method, arguments)
