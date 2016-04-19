@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
-VisualStudioVersion = 14.0.23107.0
+VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "SexyProxy", "SexyProxy\SexyProxy.shproj", "{E2935D08-AFFD-4027-A7B4-5CF04C117363}"
 EndProject
@@ -21,10 +21,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Tests.ExternalLib
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		SexyProxy\SexyProxy.projitems*{b1b59f56-bc70-42d6-a7b4-9a631912979f}*SharedItemsImports = 4
 		SexyProxy.Emit\SexyProxy.Emit.projitems*{b1b59f56-bc70-42d6-a7b4-9a631912979f}*SharedItemsImports = 4
+		SexyProxy\SexyProxy.projitems*{b1b59f56-bc70-42d6-a7b4-9a631912979f}*SharedItemsImports = 4
 		SexyProxy.Emit\SexyProxy.Emit.projitems*{f474debd-348e-4c78-b54f-273ef5600d41}*SharedItemsImports = 13
 		SexyProxy\SexyProxy.projitems*{e2935d08-affd-4027-a7b4-5cf04c117363}*SharedItemsImports = 13
+		SexyProxy\SexyProxy.projitems*{9298ca3c-1d13-4cc6-90c0-95cfd1679dc1}*SharedItemsImports = 4
 	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

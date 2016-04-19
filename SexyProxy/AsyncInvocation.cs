@@ -10,7 +10,7 @@ namespace SexyProxy
 
         private Func<Invocation, Task<T>> implementation;
 
-        public AsyncInvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Func<Invocation, Task<T>> implementation) : base(proxy, invocationHandler, method, arguments)
+        public AsyncInvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments, Func<Invocation, Task<T>> implementation) : base(proxy, invocationHandler, method, property, arguments)
         {
             this.implementation = implementation;
         }

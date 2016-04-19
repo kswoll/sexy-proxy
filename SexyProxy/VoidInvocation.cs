@@ -10,7 +10,7 @@ namespace SexyProxy
 
         private Action<Invocation> implementation;
 
-        public VoidInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, object[] arguments, Action<Invocation> implementation) : base(proxy, invocationHandler, method, arguments)
+        public VoidInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments, Action<Invocation> implementation) : base(proxy, invocationHandler, method, property, arguments)
         {
             this.implementation = implementation;
         }
