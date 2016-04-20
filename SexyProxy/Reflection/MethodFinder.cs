@@ -44,7 +44,7 @@ namespace SexyProxy.Reflection
     public static class MethodFinder<T>
     {
         private static Dictionary<string, MethodInfo> methodsBySignature = new Dictionary<string, MethodInfo>();
-        private static Dictionary<string, PropertyInfo> propertiesByName = new Dictionary<string, PropertyInfo>();
+        private static Dictionary<string, PropertyInfo> propertiesBySignature = new Dictionary<string, PropertyInfo>();
 
         static MethodFinder()
         {
@@ -55,7 +55,16 @@ namespace SexyProxy.Reflection
             }
             foreach (var property in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
             {
-                propertiesByName[property.Name] = property;
+                if (property.GetMethod != null)
+                {
+                    var signature = MethodFinder.GenerateSignature(property.GetMethod);
+                    propertiesBySignature[signature] = property;                    
+                }
+                if (property.SetMethod != null)
+                {
+                    var signature = MethodFinder.GenerateSignature(property.SetMethod);
+                    propertiesBySignature[signature] = property;                    
+                }
             }
         }
 
@@ -67,9 +76,12 @@ namespace SexyProxy.Reflection
             return methodsBySignature[signature];
         }
 
-        public static PropertyInfo FindProperty(string name)
+        public static PropertyInfo FindProperty(string signature)
         {
-            return propertiesByName[name];
+            PropertyInfo property;
+            if (!propertiesBySignature.TryGetValue(signature, out property))
+                throw new Exception("Could not find property for accessor with signature: " + signature);
+            return propertiesBySignature[signature];
         }
     }
 }

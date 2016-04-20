@@ -74,7 +74,7 @@ namespace SexyProxy.Fody
             if (body.Method.IsSetter || body.Method.IsGetter)
             {
                 property = body.Method.GetPropertyForAccessor();
-                var propertyInfoFieldDeclaration = new FieldDefinition(property.Name + "$Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.PropertyInfoType);
+                var propertyInfoFieldDeclaration = new FieldDefinition($"{Name}${(body.Method.IsGetter ? "Get" : "Set")}Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.PropertyInfoType);
                 ClassWeaver.ProxyType.Fields.Add(propertyInfoFieldDeclaration);
                 propertyInfoField = propertyInfoFieldDeclaration;
             }
@@ -103,7 +103,7 @@ namespace SexyProxy.Fody
                 {
                     // Store PropertyInfo into the static field
                     var findProperty = ClassWeaver.Context.FindProperty.Bind(methodFinder);
-                    il.Emit(OpCodes.Ldstr, property.Name);
+                    il.Emit(OpCodes.Ldstr, methodSignature);
                     il.Emit(OpCodes.Call, findProperty);
                     il.Emit(OpCodes.Stsfld, propertyInfoField);
                 }

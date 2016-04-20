@@ -14,6 +14,9 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Emit.Tests", "SexyProxy.Emit.Tests\SexyProxy.Emit.Tests.csproj", "{C9C15DEA-DA20-499F-B8C8-2C1AA9BDD7E8}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Fody.Tests", "SexyProxy.Fody.Tests\SexyProxy.Fody.Tests.csproj", "{92B910F1-66B2-4754-A0AE-67F5794775DA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{1566BB84-F5DB-405A-AAD2-DEF0A9543A60} = {1566BB84-F5DB-405A-AAD2-DEF0A9543A60}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Ios", "SexyProxy.Ios\SexyProxy.Ios.csproj", "{9298CA3C-1D13-4CC6-90C0-95CFD1679DC1}"
 EndProject

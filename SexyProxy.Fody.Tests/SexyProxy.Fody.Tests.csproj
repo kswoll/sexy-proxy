@@ -91,6 +91,10 @@
     </PropertyGroup>
     <Error Condition="!Exists('..\packages\Fody.1.29.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.1.29.0\build\Fody.targets'))" />
   </Target>
+  <PropertyGroup>
+    <PreBuildEvent>copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\SexyProxy.Fody.dll $(SolutionDir)Weavers\bin\Weavers.dll
+copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\SexyProxy.Fody.pdb $(SolutionDir)Weavers\bin\Weavers.pdb</PreBuildEvent>
+  </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
   <Target Name="BeforeBuild">

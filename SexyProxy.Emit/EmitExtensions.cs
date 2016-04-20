@@ -10,6 +10,8 @@ namespace SexyProxy.Emit
         private static readonly MethodInfo getTypeFromRuntimeHandleMethod = typeof(Type).GetMethod("GetTypeFromHandle");
         private static readonly MethodInfo typeGetMethod = typeof(Type).GetMethod("GetMethod",
             new[] { typeof(string), typeof(BindingFlags), typeof(Binder), typeof(Type[]), typeof(ParameterModifier[]) });
+        private static readonly MethodInfo typeGetProperty = typeof(Type).GetMethod("GetProperty",
+            new[] { typeof(string), typeof(BindingFlags), typeof(Binder), typeof(Type), typeof(Type[]), typeof(ParameterModifier[]) });
 
         public static void EmitDefaultBaseConstructorCall(this ILGenerator il, Type baseType)
         {
@@ -33,7 +35,7 @@ namespace SexyProxy.Emit
 
         public static void StoreMethodInfo(this ILGenerator il, FieldBuilder staticField, MethodInfo method)
         {
-            Type[] parameterTypes = method.GetParameters().Select(info => info.ParameterType).ToArray();
+            var parameterTypes = method.GetParameters().Select(info => info.ParameterType).ToArray();
 
             // The type we want to invoke GetMethod upon
             il.LoadType(method.DeclaringType);
@@ -68,6 +70,51 @@ namespace SexyProxy.Emit
 
             // Invoke method
             il.EmitCall(OpCodes.Call, typeGetMethod, null);
+
+            // Store MethodInfo into the static field
+            il.Emit(OpCodes.Stsfld, staticField);
+        }
+
+        public static void StorePropertyInfo(this ILGenerator il, FieldBuilder staticField, PropertyInfo property)
+        {
+            var parameterTypes = (property.GetMethod?.GetParameters() ?? property.SetMethod.GetParameters().Take(property.SetMethod.GetParameters().Length - 1)).Select(info => info.ParameterType).ToArray();
+
+            // The type we want to invoke GetProperty upon
+            il.LoadType(property.DeclaringType);
+
+            // Arg1: propertyName
+            il.Emit(OpCodes.Ldstr, property.Name);
+
+            // Arg2: bindingFlags
+            il.Emit(OpCodes.Ldc_I4, (int)(BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static));
+
+            // Arg3: binder
+            il.Emit(OpCodes.Ldnull);
+
+            // Arg4: returnType
+            il.LoadType(property.PropertyType);
+            
+            // Arg5: parameterTypes
+            il.Emit(OpCodes.Ldc_I4, parameterTypes.Length);
+            il.Emit(OpCodes.Newarr, typeof(Type));
+            // Copy array for each element we are going to set
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                il.Emit(OpCodes.Dup);
+            }
+            // Set each element 
+            for (int i = 0; i < parameterTypes.Length; i++)
+            {
+                il.Emit(OpCodes.Ldc_I4, i);
+                il.LoadType(parameterTypes[i]);
+                il.Emit(OpCodes.Stelem, typeof(Type));
+            }
+
+            // Arg6: parameterModifiers
+            il.Emit(OpCodes.Ldnull);
+
+            // Invoke method
+            il.EmitCall(OpCodes.Call, typeGetProperty, null);
 
             // Store MethodInfo into the static field
             il.Emit(OpCodes.Stsfld, staticField);

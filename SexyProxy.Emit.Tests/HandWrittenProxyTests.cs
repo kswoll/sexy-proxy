@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System.Reflection;
+using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SexyProxy.Emit.Tests
@@ -31,6 +32,23 @@ namespace SexyProxy.Emit.Tests
             }));
             var result = proxy.GetString();
             Assert.AreEqual(HandWritten.GetStringReturnValue + "test", result);
+        }
+
+        [Test]
+        public void StringPropertyPropertyInfo()
+        {
+            var handWritten = new HandWritten();
+            PropertyInfo property = null;
+            var proxy = new HandWrittenProxy(handWritten, new InvocationHandler(async invocation =>
+            {
+                var returnValue = await invocation.Proceed();
+                property = invocation.Property;
+                return (string)returnValue + "test";
+            }));
+
+            // ReSharper disable once UnusedVariable (We are trying to invoke the accessor, but only to set the property variable above)
+            var result = proxy.StringProperty;
+            Assert.AreEqual(nameof(HandWritten.StringProperty), property.Name);
         }
 
         [Test]

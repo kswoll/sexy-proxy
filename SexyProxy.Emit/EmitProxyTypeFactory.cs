@@ -3,6 +3,7 @@ using System.Linq;
 using System.Reflection;
 using System.Reflection.Emit;
 using System.Threading.Tasks;
+using SexyProxy.Reflection;
 
 namespace SexyProxy.Emit
 {
@@ -116,6 +117,18 @@ namespace SexyProxy.Emit
                 var methodInfoField = type.DefineField(methodInfo.Name + "__Info", typeof(MethodInfo), FieldAttributes.Private | FieldAttributes.Static);
                 staticIl.StoreMethodInfo(methodInfoField, methodInfo);
 
+                FieldBuilder propertyInfoField = null;
+                if (methodInfo.IsSpecialName)
+                {
+                    // Initialize the property info in static constructor
+                    var propertyInfo = methodInfo.GetProperty();
+                    if (propertyInfo != null)
+                    {
+                        propertyInfoField = type.DefineField($"{methodInfo.Name}${(propertyInfo.GetMethod == methodInfo ? "Get" : "Set")}Info", typeof(PropertyInfo), FieldAttributes.Private | FieldAttributes.Static);
+                        staticIl.StorePropertyInfo(propertyInfoField, propertyInfo);                        
+                    }
+                }
+
                 // Create proceed method (four different types).  The proceed method is what you may call in your invocation handler
                 // in order to invoke the behavior that would have happened without the proxy.  The actual behavior depends on the value
                 // of "target".  If it's not null, it calls the equivalent method on "target".  If it *is* null, then:
@@ -223,6 +236,11 @@ namespace SexyProxy.Emit
                 // Load method info
                 il.Emit(OpCodes.Ldsfld, methodInfoField);
 
+                if (propertyInfoField == null)
+                    il.Emit(OpCodes.Ldnull);
+                else
+                    il.Emit(OpCodes.Ldsfld, propertyInfoField);
+
                 // Create arguments array
                 il.Emit(OpCodes.Ldc_I4, parameterInfos.Length);         // Array length
                 il.Emit(OpCodes.Newarr, typeof(object));                // Instantiate array
@@ -237,8 +255,6 @@ namespace SexyProxy.Emit
 
                     il.Emit(OpCodes.Stelem, typeof(object));            // Set array at index to element value
                 }
-
-//                var proceedTarget = targetType.GetMethods().Single(targetMethod => targetMethod.Name == proceed.Name && targetMethod.GetParameters().Zip(proceed.GetParameters(), (x, y) => new { x, y }).All(x => x.x.ParameterType.Equals(x.y.ParameterType)));
                 
                 // Load function pointer to proceed method
                 il.Emit(OpCodes.Ldarg_0);
