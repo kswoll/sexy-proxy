@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -18,7 +19,7 @@ namespace SexyProxy.Fody
 
         protected override IEnumerable<MethodDefinition> GetMethods()
         {
-            var methods = SourceType.Methods.Where(x => !x.IsStatic && x.IsVirtual);
+            var methods = SourceType.Methods.Where(x => !x.IsStatic && x.IsVirtual && !x.IsFinal);
             return methods;
         }
 

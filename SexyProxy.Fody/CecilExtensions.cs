@@ -499,12 +499,6 @@ namespace SexyProxy.Fody
             return constructor;
         }
 
-        public static PropertyDefinition GetPropertyForAccessor(this MethodDefinition method)
-        {
-            string propertyName = method.Name.Substring("get_".Length);
-            return method.DeclaringType.Properties.Single(x => x.Name == propertyName);
-        }
-
 /*
 
         public static IEnumerable<TypeDefinition> GetAllTypes(this ModuleDefinition module)

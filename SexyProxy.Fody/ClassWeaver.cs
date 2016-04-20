@@ -18,6 +18,7 @@ namespace SexyProxy.Fody
         public IEnumerable<MethodDefinition> Methods { get; private set; }
         public MethodDefinition StaticConstructor { get; private set; }
         public bool ContainsAbstractNonProxiedMethod { get; private set; }
+        public Dictionary<MethodDefinition, PropertyDefinition> PropertiesByAccessor { get; private set; }
 
         protected ClassWeaver(WeaverContext context, TypeDefinition sourceType)
         {
@@ -49,7 +50,7 @@ namespace SexyProxy.Fody
 
             // Now implement/override all methods
             var uniqueNames = new Dictionary<string, int>();
-            var propertiesByAccessor = SourceType.Properties
+            PropertiesByAccessor = SourceType.Properties
                 .Select(x => new { Property = x, Accessor = x.GetMethod })
                 .Concat(SourceType.Properties.Select(x => new { Property = x, Accessor = x.SetMethod }))
                 .Where(x => x.Accessor != null)
@@ -65,7 +66,7 @@ namespace SexyProxy.Fody
                     continue;
                 if (methodInfo.IsConstructor)
                     continue;
-                if (((methodInfo.IsGetter || methodInfo.IsSetter) && propertiesByAccessor[methodInfo].IsDefined(Context.DoNotProxyAttribute)) ||
+                if (((methodInfo.IsGetter || methodInfo.IsSetter) && PropertiesByAccessor[methodInfo].IsDefined(Context.DoNotProxyAttribute)) ||
                     (!methodInfo.IsGetter && !methodInfo.IsSetter && methodInfo.IsDefined(Context.DoNotProxyAttribute)))
                 {
                     if (methodInfo.IsAbstract)
@@ -74,7 +75,7 @@ namespace SexyProxy.Fody
                 }
 
                 // Generate a unique name for the method in the event of overloads.  
-                var name = methodInfo.Name;
+                var name = methodInfo.Name.Split('.').Last();
                 int index;
                 if (uniqueNames.TryGetValue(name, out index))
                 {

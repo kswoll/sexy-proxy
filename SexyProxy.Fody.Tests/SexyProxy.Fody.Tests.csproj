@@ -61,6 +61,7 @@
     <Compile Include="HandWrittenWithDynamicProxyTests.cs" />
     <Compile Include="IHandWritten.cs" />
     <Compile Include="InPlaceProxyTests.cs" />
+    <Compile Include="InterfacePropertyTests.cs" />
     <Compile Include="MethodFinderTests.cs" />
     <Compile Include="OverloadTests.cs" />
     <Compile Include="ReverseProxyTests.cs" />

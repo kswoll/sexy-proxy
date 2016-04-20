@@ -118,7 +118,6 @@ namespace SexyProxy.Fody
                 LogInfo($"Emitting proxy for {sourceType.FullName}");
                 ClassWeaver classWeaver;
 
-//                Debugger.Launch();
                 if (sourceType.IsInterface)
                     classWeaver = new InterfaceClassWeaver(context, sourceType);
                 else if (proxyInterface.IsAssignableFrom(sourceType))

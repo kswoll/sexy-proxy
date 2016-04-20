@@ -71,10 +71,10 @@ namespace SexyProxy.Fody
 
             FieldReference propertyInfoField = null;
             PropertyDefinition property = null;
-            if (body.Method.IsSetter || body.Method.IsGetter)
+            if (Method.IsSetter || Method.IsGetter)
             {
-                property = body.Method.GetPropertyForAccessor();
-                var propertyInfoFieldDeclaration = new FieldDefinition($"{Name}${(body.Method.IsGetter ? "Get" : "Set")}Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.PropertyInfoType);
+                property = ClassWeaver.PropertiesByAccessor[Method];
+                var propertyInfoFieldDeclaration = new FieldDefinition($"{Name}${(Method.IsGetter ? "Get" : "Set")}Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.PropertyInfoType);
                 ClassWeaver.ProxyType.Fields.Add(propertyInfoFieldDeclaration);
                 propertyInfoField = propertyInfoFieldDeclaration;
             }
