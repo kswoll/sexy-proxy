@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -115,14 +116,11 @@ namespace SexyProxy.Fody
                             if (startInstructionMethod != null)
                             {
                                 var asyncType = startInstructionMethod.GenericArguments[0];
-                                var asyncConstructor = asyncType.Resolve().GetConstructors().Single();
                                 var invocationField = InstrumentAsyncType(asyncType);
 
-                                // Now find the instantiation of the asyncType
-                                var instantiateAsyncTypeIndex = instructions.IndexOf(x => x.OpCode == OpCodes.Newobj && x.Operand.Equals(asyncConstructor));
-                                if (instantiateAsyncTypeIndex == -1)
-                                    throw new Exception($"Could not find expected instantiation of async type: {asyncType}");
-                                var nextSetFieldIndex = instructions.IndexOf(x => x.OpCode == OpCodes.Stfld);
+                                // Find the first instruction that is setting a field on the async type.  We can just assume it's a three instruction 
+                                // set (it always is in this context)  And we add our instructions to set the invocation field.
+                                var nextSetFieldIndex = instructions.IndexOf(x => x.OpCode == OpCodes.Stfld && x.Operand is FieldDefinition && ((FieldDefinition)x.Operand).DeclaringType.CompareTo(asyncType));
                                 if (nextSetFieldIndex == -1)
                                     throw new Exception($"Could not find expected stfld of async type: {asyncType}");
                                 var setFieldLoadInstance = instructions[nextSetFieldIndex - 2];

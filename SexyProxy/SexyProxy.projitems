@@ -9,7 +9,6 @@
     <Import_RootNamespace>SexyProxy</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="$(MSBuildThisFileDirectory)AsyncInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DoNotProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FodyProxyTypeFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvalidAsyncException.cs" />
@@ -25,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)ProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyForAttribute.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AsyncInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\ReflectionUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidAsyncInvocation.cs" />
