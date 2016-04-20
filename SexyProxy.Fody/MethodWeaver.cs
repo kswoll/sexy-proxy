@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -13,6 +14,7 @@ namespace SexyProxy.Fody
     {
         protected abstract void EmitInvocationHandler(ILProcessor il);
         protected abstract void EmitProceedTarget(ILProcessor il);
+        protected abstract void EmitOptOutTarget(ILProcessor il);
 
         public ClassWeaver ClassWeaver { get; }
         public MethodDefinition Method { get; }
@@ -147,18 +149,53 @@ namespace SexyProxy.Fody
             // Implement method
             body.Emit(il =>
             {
-                ImplementBody(il, methodInfoField, propertyInfoField, proceedReference);
+                ImplementBody(il, methodInfoField, propertyInfoField, proceedReference, proceedTargetMethod);
             });
         }
 
-        protected virtual void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
+        protected virtual void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed, MethodReference proceedTargetMethod)
         {
+            // Allow the InvocationHandler to opt out of handling (for perf)
+            var notOptedOut = il.Create(OpCodes.Nop);
+            EmitInvocationHandler(il);                                                      // Load handler
+            il.Emit(OpCodes.Ldarg_0);                                                       // Load this
+            il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationHandlerIsHandlerActive);    // Call InvocationHandler.IsHandlerActive and leave the bool result on the stack
+            il.Emit(OpCodes.Brtrue, notOptedOut);                                           // If they didn't opt out (returned true), jump to the normal interception logic below
+            ImplementOptOut(il, proceedTargetMethod);                                       // They opted out, so do an implicit (and efficient) equivalent of proceed
+
+            il.Append(notOptedOut);
             EmitCallToInvocationHandler(il, methodInfoField, propertyInfoField, proceed);
 
             // Return
             il.Emit(OpCodes.Ret);            
         }
-            
+
+        private void ImplementOptOut(ILProcessor il, MethodReference proceedTargetMethod)
+        {
+            var parameterInfos = Method.Parameters;
+
+            if (Method.Name == "Method2")
+            {
+                Debugger.Launch();
+            }
+
+            // Load target for subsequent call
+            EmitOptOutTarget(il);
+
+            // Load the arguments onto the stack
+            for (short i = 0; i < parameterInfos.Count; i++)
+            {
+                il.Emit(OpCodes.Ldarg, parameterInfos[i]);
+            }
+
+            var genericProceedTargetMethod = proceedTargetMethod;
+            if (Method.GenericParameters.Count > 0)
+                genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(Method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
+
+            il.Emit(GetProceedCallOpCode(), genericProceedTargetMethod);
+            il.Emit(OpCodes.Ret);                    
+        }
+
         protected void EmitCallToInvocationHandler(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
         {
             // Load handler (consumed by call to invokeMethod near the end)

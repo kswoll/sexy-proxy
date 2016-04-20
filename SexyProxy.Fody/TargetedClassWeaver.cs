@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -148,6 +147,12 @@ namespace SexyProxy.Fody
             protected override void EmitProceedTarget(ILProcessor il)
             {
                 EmitProxyFromProceed(il);
+                il.Emit(OpCodes.Ldfld, target);
+            }
+
+            protected override void EmitOptOutTarget(ILProcessor il)
+            {
+                il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldfld, target);
             }
         }

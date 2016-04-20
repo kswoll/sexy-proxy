@@ -345,7 +345,7 @@ namespace SexyProxy.Fody
                 return genericParameter;
 
             var name = genericParameter.Name;
-            var localParameter = typeContext.GenericParameters.SingleOrDefault(x => x.Name == name);
+            var localParameter = typeContext?.GenericParameters.SingleOrDefault(x => x.Name == name);
             return localParameter ?? genericParameter;
         }
 

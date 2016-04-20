@@ -183,12 +183,12 @@ namespace SexyProxy.Fody.Tests
                 return s + "foo2";
             }
 
-            public string Method<T, U>(T s) 
+            public string Method2<T, U>(T s) 
             {
                 return s + "foo3";
             }
 
-            public string Method<T>(T s)
+            public string Method3<T>(T s)
             {
                 return s + "foo4";
             }

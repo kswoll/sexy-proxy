@@ -69,6 +69,11 @@ namespace SexyProxy.Fody
                 EmitProxyFromProceed(il);
             }
 
+            protected override void EmitOptOutTarget(ILProcessor il)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+            }
+
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
                 if (Method.ReturnType.CompareTo(ClassWeaver.Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 

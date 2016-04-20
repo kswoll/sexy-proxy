@@ -70,12 +70,17 @@ namespace SexyProxy.Fody
                 EmitProxyFromProceed(il);
             }
 
-            protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
+            protected override void EmitOptOutTarget(ILProcessor il)
+            {
+                il.Emit(OpCodes.Ldarg_0);
+            }
+
+            protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed, MethodReference proceedTargetMethod)
             {
                 // If it's abstract, then the method is entirely implemented by the InvocationHandler
                 if (Method.IsAbstract)
                 {
-                    base.ImplementBody(il, methodInfoField, propertyInfoField, proceed);
+                    base.ImplementBody(il, methodInfoField, propertyInfoField, proceed, proceedTargetMethod);
                 }
                 // Otherwise, it is implemented by the class itself, and calling this.Invocation().Proceed() calls the InvocationHandler
                 else

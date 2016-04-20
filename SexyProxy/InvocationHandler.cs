@@ -6,10 +6,17 @@ namespace SexyProxy
     public class InvocationHandler
     {
         private Func<Invocation, Task<object>> handler;
+        private Func<object, bool> proxyPredicate;
 
-        public InvocationHandler(Func<Invocation, Task<object>> handler)
+        public InvocationHandler(Func<Invocation, Task<object>> handler, Func<object, bool> proxyPredicate = null)
         {
             this.handler = handler;
+            this.proxyPredicate = proxyPredicate ?? (x => true);
+        }
+
+        public bool IsHandlerActive(object proxy)
+        {
+            return proxyPredicate(proxy);
         }
 
         private Task<object> GetTask(Invocation invocation)

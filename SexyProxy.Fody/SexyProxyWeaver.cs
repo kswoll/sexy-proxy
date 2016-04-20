@@ -56,6 +56,7 @@ namespace SexyProxy.Fody
             var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
             var asyncInvocationTType = ModuleDefinition.FindType("SexyProxy", "AsyncInvocationT`1", sexyProxy, "T");
             var invocationHandlerType = ModuleDefinition.FindType("SexyProxy", "InvocationHandler", sexyProxy);
+            var invocationHandlerIsHandlerActive = ModuleDefinition.FindMethod(invocationHandlerType, "IsHandlerActive");
             var voidInvocationType = ModuleDefinition.FindType("SexyProxy", "VoidInvocation", sexyProxy);
             var voidInvocationConstructor = ModuleDefinition.FindConstructor(voidInvocationType);
             var voidAsyncInvocationType = ModuleDefinition.FindType("SexyProxy", "VoidAsyncInvocation", sexyProxy);
@@ -93,6 +94,7 @@ namespace SexyProxy.Fody
                 AsyncInvokeTMethod = asyncInvokeTMethod,
                 AsyncVoidInvokeMethod = asyncVoidInvokeMethod,
                 InvocationHandlerType = invocationHandlerType,
+                InvocationHandlerIsHandlerActive = invocationHandlerIsHandlerActive,
                 InvokeTMethod = invokeTMethod,
                 ObjectType = objectType,
                 VoidAsyncInvocationConstructor = voidAsyncInvocationConstructor,
