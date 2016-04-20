@@ -11,3 +11,7 @@ SexyProxy.Emit.Tests/bin/
 SexyProxy.Emit.Tests/obj/
 SexyProxy.Tests.ExternalLibrary/bin/
 SexyProxy.Tests.ExternalLibrary/obj/
+SexyProxy.Ios/bin/
+SexyProxy.Ios/obj/
+Weavers/bin/Weavers.dll
+Weavers/bin/Weavers.pdb

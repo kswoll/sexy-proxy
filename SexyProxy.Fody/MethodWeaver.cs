@@ -68,24 +68,45 @@ namespace SexyProxy.Fody
             var methodInfoFieldDefinition = new FieldDefinition(Name + "$Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.MethodInfoType);
             ClassWeaver.ProxyType.Fields.Add(methodInfoFieldDefinition);
             FieldReference methodInfoField = methodInfoFieldDefinition;
+
+            FieldReference propertyInfoField = null;
+            PropertyDefinition property = null;
+            if (body.Method.IsSetter || body.Method.IsGetter)
+            {
+                property = body.Method.GetPropertyForAccessor();
+                var propertyInfoFieldDeclaration = new FieldDefinition($"{Name}${(body.Method.IsGetter ? "Get" : "Set")}Info", FieldAttributes.Private | FieldAttributes.Static, ClassWeaver.Context.PropertyInfoType);
+                ClassWeaver.ProxyType.Fields.Add(propertyInfoFieldDeclaration);
+                propertyInfoField = propertyInfoFieldDeclaration;
+            }
+
             StaticConstructor.Body.Emit(il =>
             {
-                TypeReference methodDeclaringType = Import(Method.DeclaringType);
+                var methodDeclaringType = Import(Method.DeclaringType);
                 if (ClassWeaver.ProxyType.HasGenericParameters)
                 {
                     var genericProxyType = ClassWeaver.ProxyType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
                     methodInfoField = methodInfoField.Bind(genericProxyType);
+                    propertyInfoField = propertyInfoField?.Bind(genericProxyType);
                     methodDeclaringType = ClassWeaver.SourceType.MakeGenericInstanceType(ClassWeaver.ProxyType.GenericParameters.ToArray());
                 }
 
-                var methodSignature = Method.GenerateSignature();
                 var methodFinder = ClassWeaver.Context.MethodFinder.MakeGenericInstanceType(methodDeclaringType);
-                var findMethod = ClassWeaver.Context.FindMethod.Bind(methodFinder);
 
                 // Store MethodInfo into the static field
+                var methodSignature = Method.GenerateSignature();
+                var findMethod = ClassWeaver.Context.FindMethod.Bind(methodFinder);
                 il.Emit(OpCodes.Ldstr, methodSignature);
                 il.Emit(OpCodes.Call, findMethod);
                 il.Emit(OpCodes.Stsfld, methodInfoField);
+
+                if (property != null)
+                {
+                    // Store PropertyInfo into the static field
+                    var findProperty = ClassWeaver.Context.FindProperty.Bind(methodFinder);
+                    il.Emit(OpCodes.Ldstr, methodSignature);
+                    il.Emit(OpCodes.Call, findProperty);
+                    il.Emit(OpCodes.Stsfld, propertyInfoField);
+                }
             });
 
             // Create proceed method (four different types).  The proceed method is what you may call in your invocation handler
@@ -126,31 +147,31 @@ namespace SexyProxy.Fody
             // Implement method
             body.Emit(il =>
             {
-                ImplementBody(il, methodInfoField, proceedReference);
+                ImplementBody(il, methodInfoField, propertyInfoField, proceedReference);
             });
         }
 
-        protected virtual void ImplementBody(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
+        protected virtual void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
         {
-            EmitCallToInvocationHandler(il, methodInfoField, proceed);
+            EmitCallToInvocationHandler(il, methodInfoField, propertyInfoField, proceed);
 
             // Return
             il.Emit(OpCodes.Ret);            
         }
             
-        protected void EmitCallToInvocationHandler(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
+        protected void EmitCallToInvocationHandler(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
         {
             // Load handler (consumed by call to invokeMethod near the end)
             EmitInvocationHandler(il);
 
             // Put Invocation onto the stack
-            EmitInvocation(il, methodInfoField, proceed);
+            EmitInvocation(il, methodInfoField, propertyInfoField, proceed);
 
             // Invoke handler
             il.Emit(OpCodes.Callvirt, InvokeMethod);
         }
 
-        protected void EmitInvocation(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
+        protected void EmitInvocation(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
         {
             // Load proxy
             il.Emit(OpCodes.Ldarg_0);
@@ -160,6 +181,12 @@ namespace SexyProxy.Fody
 
             // Load method info
             il.Emit(OpCodes.Ldsfld, methodInfoField);
+
+            // Load property info
+            if (propertyInfoField != null)
+                il.Emit(OpCodes.Ldsfld, propertyInfoField);
+            else
+                il.Emit(OpCodes.Ldnull);
 
             // Create arguments array
             EmitInvocationArgumentsArray(il, Method.Parameters.Count);

@@ -69,12 +69,12 @@ namespace SexyProxy.Fody
                 EmitProxyFromProceed(il);
             }
 
-            protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, MethodReference proceed)
+            protected override void ImplementBody(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
             {
                 // If it's abstract, then the method is entirely implemented by the InvocationHandler
                 if (Method.IsAbstract)
                 {
-                    base.ImplementBody(il, methodInfoField, proceed);
+                    base.ImplementBody(il, methodInfoField, propertyInfoField, proceed);
                 }
                 // Otherwise, it is implemented by the class itself, and calling this.Invocation().Proceed() calls the InvocationHandler
                 else
@@ -86,7 +86,7 @@ namespace SexyProxy.Fody
                     var instructions = Method.Body.Instructions.ToList();
                     Method.Body.Instructions.Clear();                   // Wipe out the existing instructions for the method
                     Method.Body.Variables.Add(invocation);              // Add a variable to store the invocation
-                    EmitInvocation(il, methodInfoField, proceed);       // Put the invocation on the stack
+                    EmitInvocation(il, methodInfoField, propertyInfoField, proceed);       // Put the invocation on the stack
                     il.Emit(OpCodes.Dup);                               // Duplicate invocation for below
                     il.Emit(OpCodes.Stloc, invocation);                 // Store the invocation in the variable declared (just) earlier
 

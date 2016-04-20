@@ -11,6 +11,7 @@ namespace SexyProxy.Fody
         public Action<string> LogWarning { get; set; }
         public AssemblyNameReference SexyProxy { get; set; } 
         public TypeReference MethodInfoType { get; set; }
+        public TypeReference PropertyInfoType { get; set; }
         public TypeReference Func2Type { get; set; }
         public TypeReference Action1Type { get; set; }
         public TypeReference ObjectArrayType { get; set; }
@@ -35,6 +36,7 @@ namespace SexyProxy.Fody
         public TypeReference AsyncTaskMethodBuilder { get; set; }
         public TypeReference MethodFinder { get; set; }
         public MethodReference FindMethod { get; set; }
+        public MethodReference FindProperty { get; set; }
         public TypeReference DoNotProxyAttribute { get; set; }
         public MethodReference OriginalMethodAttributeConstructor { get; set; }
     }

@@ -47,6 +47,7 @@ namespace SexyProxy.Fody
             targetTypes = targetTypes.Concat(proxyFors).ToArray();
 
             var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
+            var propertyInfoType = ModuleDefinition.Import(typeof(PropertyInfo));
 
             var func2Type = ModuleDefinition.Import(typeof(Func<,>));
             var action1Type = ModuleDefinition.Import(typeof(Action<>));
@@ -72,6 +73,7 @@ namespace SexyProxy.Fody
             var asyncTaskMethodBuilder = ModuleDefinition.Import(typeof(AsyncTaskMethodBuilder<>));
             var methodFinder = ModuleDefinition.FindType("SexyProxy.Reflection", "MethodFinder`1", sexyProxy, "T");
             var findMethod = ModuleDefinition.FindMethod(methodFinder, "FindMethod");
+            var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
 
             var context = new WeaverContext
             {
@@ -81,6 +83,7 @@ namespace SexyProxy.Fody
                 LogInfo = LogInfo,
                 SexyProxy = sexyProxy,
                 MethodInfoType = methodInfoType,
+                PropertyInfoType = propertyInfoType,
                 Action1Type = action1Type,
                 AsyncInvocationTType = asyncInvocationTType,
                 Func2Type = func2Type,
@@ -105,6 +108,7 @@ namespace SexyProxy.Fody
                 AsyncTaskMethodBuilder = asyncTaskMethodBuilder,
                 MethodFinder = methodFinder,
                 FindMethod = findMethod,
+                FindProperty = findProperty,
                 DoNotProxyAttribute = doNotProxyAttribute,
                 OriginalMethodAttributeConstructor = originalMethodAttributeConstructor
             };

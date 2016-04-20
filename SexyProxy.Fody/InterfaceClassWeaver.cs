@@ -54,7 +54,7 @@ namespace SexyProxy.Fody
                 // If T is an interface, then we want to check if target is null; if so, we want to just return the default value
                 var targetNotNull = il.Create(OpCodes.Nop);
                 EmitProxyFromProceed(il);
-                il.Emit(OpCodes.Ldfld, ClassWeaver.Target);              // Load "target" from "this"
+                il.Emit(OpCodes.Ldfld, ClassWeaver.Target);  // Load "target" from "this"
                 il.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
                 CecilExtensions.CreateDefaultMethodImplementation(methodBody.Method, il);
 
