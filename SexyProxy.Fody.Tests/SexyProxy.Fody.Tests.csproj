@@ -64,6 +64,7 @@
     <Compile Include="InterfacePropertyTests.cs" />
     <Compile Include="MethodFinderTests.cs" />
     <Compile Include="OverloadTests.cs" />
+    <Compile Include="PredicatedProxyTests.cs" />
     <Compile Include="ReverseProxyTests.cs" />
     <Compile Include="OutsideReferenceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

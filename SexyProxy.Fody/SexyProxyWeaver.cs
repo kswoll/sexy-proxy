@@ -42,7 +42,6 @@ namespace SexyProxy.Fody
             var targetTypes = ModuleDefinition.GetAllTypes().Where(x => x.IsDefined(proxyAttribute, true) || reverseProxyInterface.IsAssignableFrom(x) || proxyInterface.IsAssignableFrom(x)).ToArray();
 
             // Get external proxy references
-//            Debugger.Launch();
             var proxyFors = ModuleDefinition.Assembly.GetCustomAttributes(proxyForAttribute).Select(x => (TypeReference)x.ConstructorArguments.Single().Value).Select(x => x.Resolve()).ToArray();
             targetTypes = targetTypes.Concat(proxyFors).ToArray();
 

@@ -174,11 +174,6 @@ namespace SexyProxy.Fody
         {
             var parameterInfos = Method.Parameters;
 
-            if (Method.Name == "Method2")
-            {
-                Debugger.Launch();
-            }
-
             // Load target for subsequent call
             EmitOptOutTarget(il);
 
