@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 #if EMIT
@@ -47,10 +48,12 @@ namespace SexyProxy
         /// <param name="target">The instance of T that should be the recipient of all invocations
         /// on the proxy via Invocation.Proceed.</param>
         /// <param name="invocationHandler">This is where you get to inject your logic.</param>
+        /// <param name="predicate">Optional predicate to determine if the interception should happen.  Useful 
+        /// improving performance in certain situations</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(T target, Func<Invocation, Task<object>> invocationHandler)
+        public static T CreateProxy<T>(T target, Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null)
         {
-            return Proxy<T>.CreateProxy(target, invocationHandler);
+            return Proxy<T>.CreateProxy(target, invocationHandler, predicate);
         }
 
         /// <summary>
@@ -70,10 +73,12 @@ namespace SexyProxy
         /// <param name="target">The instance of T that should be the recipient of all invocations
         /// on the proxy via Invocation.Proceed.</param>
         /// <param name="invocationHandler">This is where you get to inject your logic.</param>
+        /// <param name="predicate">Optional predicate to determine if the interception should happen.  Useful 
+        /// improving performance in certain situations</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(T target, Func<Invocation, object> invocationHandler)
+        public static T CreateProxy<T>(T target, Func<Invocation, object> invocationHandler, ProxyPredicate<T> predicate = null)
         {
-            return Proxy<T>.CreateProxy(target, invocationHandler);
+            return Proxy<T>.CreateProxy(target, invocationHandler, predicate);
         }
 
         /// <summary>
@@ -91,10 +96,12 @@ namespace SexyProxy
         /// <typeparam name="T">The type to create the proxy for.  May be an interface or a 
         /// concrete base class.</typeparam>
         /// <param name="invocationHandler">This is where you get to inject your logic.</param>
+        /// <param name="predicate">Optional predicate to determine if the interception should happen.  Useful 
+        /// improving performance in certain situations</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(Func<Invocation, Task<object>> invocationHandler)
+        public static T CreateProxy<T>(Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null)
         {
-            return CreateProxy(default(T), invocationHandler);
+            return CreateProxy(default(T), invocationHandler, predicate);
         }
 
         /// <summary>
@@ -112,10 +119,12 @@ namespace SexyProxy
         /// <typeparam name="T">The type to create the proxy for.  May be an interface or a 
         /// concrete base class.</typeparam>
         /// <param name="invocationHandler">This is where you get to inject your logic.</param>
+        /// <param name="predicate">Optional predicate to determine if the interception should happen.  Useful 
+        /// improving performance in certain situations</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(Func<Invocation, object> invocationHandler)
+        public static T CreateProxy<T>(Func<Invocation, object> invocationHandler, ProxyPredicate<T> predicate = null)
         {
-            return Proxy<T>.CreateProxy(default(T), invocationHandler);
+            return Proxy<T>.CreateProxy(default(T), invocationHandler, predicate);
         }
     }
 
@@ -126,39 +135,39 @@ namespace SexyProxy
         private static bool isFodyProxy = FodyProxyTypeFactory.IsFodyProxy(typeof(T));
         private static Type proxyType = CreateProxyType();
 
-        public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler)
+        public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate)
         {
             if (isSetInvocationHandler)
             {
                 var result = (T)Activator.CreateInstance(proxyType);
-                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler);
+                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property));
                 return result;
             }
             else if (isInPlace)
             {
-                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler));
+                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
             else
             {
-                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler));
+                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
         }
 
-        public static T CreateProxy(T target, Func<Invocation, object> invocationHandler)
+        public static T CreateProxy(T target, Func<Invocation, object> invocationHandler, ProxyPredicate<T> predicate)
         {
             if (isSetInvocationHandler)
             {
                 var result = (T)Activator.CreateInstance(proxyType);
-                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler);
+                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property));
                 return result;
             }
             else if (isInPlace)
             {
-                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler));
+                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
             else
             {
-                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler));
+                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
         }
 

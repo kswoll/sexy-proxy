@@ -17,6 +17,7 @@ namespace SexyProxy.Emit
         private static MethodInfo asyncInvokeTMethod = typeof(InvocationHandler).GetMethod("AsyncInvokeT");
         private static PropertyInfo invocationArguments = typeof(Invocation).GetProperty("Arguments");
         private static PropertyInfo invocationProxy = typeof(Invocation).GetProperty("Proxy");
+        private static MethodInfo invocationHandlerIsHandlerActive = typeof(InvocationHandler).GetMethod(nameof(InvocationHandler.IsHandlerActive));
 
         public Type CreateProxyType(Type sourceType)
         {
@@ -222,6 +223,21 @@ namespace SexyProxy.Emit
                 // Implement method
                 var il = method.GetILGenerator();
 
+                // Allow the InvocationHandler to opt out of handling (for perf)
+                var notOptedOut = il.DefineLabel();
+                il.Emit(OpCodes.Ldarg_0);
+                il.Emit(OpCodes.Ldfld, invocationHandler);
+                il.Emit(OpCodes.Ldarg_0);                                                       // Load this
+                il.Emit(OpCodes.Ldsfld, methodInfoField);                                       // Load the MethodInfo onto the stack
+                if (propertyInfoField == null)
+                    il.Emit(OpCodes.Ldnull);                                                    // Not a property so load null onto the stack
+                else
+                    il.Emit(OpCodes.Ldsfld, propertyInfoField);                                 // Load the PropertyInfo onto the stack
+                il.Emit(OpCodes.Call, invocationHandlerIsHandlerActive);                        // Call InvocationHandler.IsHandlerActive and leave the bool result on the stack
+                il.Emit(OpCodes.Brtrue, notOptedOut);                                           // If they didn't opt out (returned true), jump to the normal interception logic below
+                ImplementOptOut(il, methodInfo, proceedCall, isIntf, target);                   // They opted out, so do an implicit (and efficient) equivalent of proceed
+                il.MarkLabel(notOptedOut);
+
                 // Load handler
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldfld, invocationHandler);
@@ -276,6 +292,24 @@ namespace SexyProxy.Emit
             var proxyType = type.CreateType();
 
             return proxyType;            
+        }
+
+        private void ImplementOptOut(ILGenerator il, MethodInfo methodInfo, OpCode proceedCall, bool isIntf, FieldBuilder target)
+        {
+            var parameterInfos = methodInfo.GetParameters();
+
+            // Load target for subsequent call
+            il.Emit(OpCodes.Ldarg_0);
+            il.Emit(OpCodes.Ldfld, target);
+
+            // Load the arguments onto the stack
+            for (short i = 0; i < parameterInfos.Length; i++)
+            {
+                il.Emit(OpCodes.Ldarg, i + 1);
+            }
+
+            il.Emit(proceedCall, methodInfo);
+            il.Emit(OpCodes.Ret);                    
         }
     }
 }

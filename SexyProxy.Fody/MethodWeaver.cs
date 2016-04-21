@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -159,6 +158,11 @@ namespace SexyProxy.Fody
             var notOptedOut = il.Create(OpCodes.Nop);
             EmitInvocationHandler(il);                                                      // Load handler
             il.Emit(OpCodes.Ldarg_0);                                                       // Load this
+            il.Emit(OpCodes.Ldsfld, methodInfoField);                                       // Load the MethodInfo onto the stack
+            if (propertyInfoField == null)
+                il.Emit(OpCodes.Ldnull);                                                    // Not a property so load null onto the stack
+            else
+                il.Emit(OpCodes.Ldsfld, propertyInfoField);                                 // Load the PropertyInfo onto the stack
             il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationHandlerIsHandlerActive);    // Call InvocationHandler.IsHandlerActive and leave the bool result on the stack
             il.Emit(OpCodes.Brtrue, notOptedOut);                                           // If they didn't opt out (returned true), jump to the normal interception logic below
             ImplementOptOut(il, proceedTargetMethod);                                       // They opted out, so do an implicit (and efficient) equivalent of proceed

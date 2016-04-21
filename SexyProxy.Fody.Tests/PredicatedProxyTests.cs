@@ -11,7 +11,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = new TestProxy(new InvocationHandler(
                 invocation => Task.FromResult((object)"foo"),
-                _ => false));
+                (_, method, property) => false));
 
             var value = proxy.StringProperty;
             Assert.IsNull(value);
@@ -22,7 +22,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = new TestProxy(new InvocationHandler(
                 invocation => Task.FromResult((object)"foo"),
-                _ => true));
+                (_, method, property) => true));
 
             var value = proxy.StringProperty;
             Assert.AreEqual("foo", value);

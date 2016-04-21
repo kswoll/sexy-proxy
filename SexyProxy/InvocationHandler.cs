@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace SexyProxy
@@ -7,15 +8,15 @@ namespace SexyProxy
     {
         private Func<Invocation, Task<object>> asyncHandler;
         private Func<Invocation, object> handler;
-        private Func<object, bool> proxyPredicate;
+        private Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate;
 
         /// <summary>
         /// Provides a handler for all methods, async or otherwise.
         /// </summary>
-        public InvocationHandler(Func<Invocation, Task<object>> asyncHandler, Func<object, bool> proxyPredicate = null)
+        public InvocationHandler(Func<Invocation, Task<object>> asyncHandler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null)
         {
             this.asyncHandler = asyncHandler;
-            this.proxyPredicate = proxyPredicate ?? (x => true);
+            this.proxyPredicate = proxyPredicate ?? ((x, method, property) => true);
         }
 
         /// <summary>
@@ -23,15 +24,15 @@ namespace SexyProxy
         /// overhead in scenarios where you know you don't want to handle async methods anyway.  (Such async methods
         /// will simply operate without interception)
         /// </summary>
-        public InvocationHandler(Func<Invocation, object> handler, Func<object, bool> proxyPredicate = null)
+        public InvocationHandler(Func<Invocation, object> handler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null)
         {
             this.handler = handler;
-            this.proxyPredicate = proxyPredicate ?? (x => true);
+            this.proxyPredicate = proxyPredicate ?? ((x, method, property) => true);
         }
 
-        public bool IsHandlerActive(object proxy)
+        public bool IsHandlerActive(object proxy, MethodInfo method, PropertyInfo property)
         {
-            return proxyPredicate(proxy);
+            return proxyPredicate(proxy, method, property);
         }
 
         private Task<object> GetTask(Invocation invocation)
