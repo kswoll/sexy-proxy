@@ -73,7 +73,7 @@ namespace SexyProxy
         /// <returns>The new instance of the proxy that is an instance of T</returns>
         public static T CreateProxy<T>(T target, Func<Invocation, object> invocationHandler)
         {
-            return CreateProxy(target, invocation => Task.FromResult(invocationHandler(invocation)));
+            return Proxy<T>.CreateProxy(target, invocationHandler);
         }
 
         /// <summary>
@@ -115,7 +115,7 @@ namespace SexyProxy
         /// <returns>The new instance of the proxy that is an instance of T</returns>
         public static T CreateProxy<T>(Func<Invocation, object> invocationHandler)
         {
-            return CreateProxy(default(T), invocation => Task.FromResult(invocationHandler(invocation)));
+            return Proxy<T>.CreateProxy(default(T), invocationHandler);
         }
     }
 
@@ -127,6 +127,24 @@ namespace SexyProxy
         private static Type proxyType = CreateProxyType();
 
         public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler)
+        {
+            if (isSetInvocationHandler)
+            {
+                var result = (T)Activator.CreateInstance(proxyType);
+                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler);
+                return result;
+            }
+            else if (isInPlace)
+            {
+                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler));
+            }
+            else
+            {
+                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler));
+            }
+        }
+
+        public static T CreateProxy(T target, Func<Invocation, object> invocationHandler)
         {
             if (isSetInvocationHandler)
             {
