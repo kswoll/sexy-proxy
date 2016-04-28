@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Linq;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
@@ -109,6 +110,10 @@ namespace SexyProxy.Fody
                     {
                         originalMethod.Body.InitLocals = true;
                         originalMethod.Body.Variables.Add(new VariableDefinition(variable.Name, variable.VariableType));
+                    }
+                    foreach (var handler in Method.Body.ExceptionHandlers)
+                    {
+                        originalMethod.Body.ExceptionHandlers.Add(handler);
                     }
                     originalMethod.Body.Emit(il =>
                     {
