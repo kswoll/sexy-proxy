@@ -43,5 +43,29 @@ namespace SexyProxy.Fody.Tests
 
             [DoNotProxy]public abstract void SomeMethod();
         }
+
+        [Test]
+        public void OverrideApiCanBeInstantiated()
+        {
+            Proxy.CreateProxy<OverrideApi>(invocation => Task.FromResult<object>(null));
+        }
+
+        public class Api : IReverseProxy, ISetInvocationHandler
+        {
+            private InvocationHandler invocationHandler;
+
+            [DoNotProxy]
+            InvocationHandler IReverseProxy.InvocationHandler => invocationHandler;
+
+            InvocationHandler ISetInvocationHandler.InvocationHandler
+            {
+                set { invocationHandler = value; }
+            }
+        }
+
+        private abstract class OverrideApi : Api
+        {
+            public abstract Task<string> ReflectString(string s);
+        }
     }
 }

@@ -48,22 +48,28 @@ namespace SexyProxy.Reflection
 
         static MethodFinder()
         {
-            foreach (var method in typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            var type = typeof(T);
+            if (type.IsGenericType)
+                type = type.GetGenericTypeDefinition();
+
+            foreach (var item in type.GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
+                typeof(T).GetMethods(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken), (baseInfo, realInfo) => new { BaseInfo = baseInfo, RealInfo = realInfo }))
             {
-                var signature = MethodFinder.GenerateSignature(method);
-                methodsBySignature[signature] = method;
+                var signature = MethodFinder.GenerateSignature(item.BaseInfo);
+                methodsBySignature[signature] = item.RealInfo;
             }
-            foreach (var property in typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public))
+            foreach (var item in type.GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken).Zip(
+                typeof(T).GetProperties(BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public).OrderBy(x => x.MetadataToken), (baseInfo, realInfo) => new { BaseInfo = baseInfo, RealInfo = realInfo }))
             {
-                if (property.GetMethod != null)
+                if (item.RealInfo.GetMethod != null)
                 {
-                    var signature = MethodFinder.GenerateSignature(property.GetMethod);
-                    propertiesBySignature[signature] = property;                    
+                    var signature = MethodFinder.GenerateSignature(item.BaseInfo.GetMethod);
+                    propertiesBySignature[signature] = item.RealInfo;
                 }
-                if (property.SetMethod != null)
+                if (item.RealInfo.SetMethod != null)
                 {
-                    var signature = MethodFinder.GenerateSignature(property.SetMethod);
-                    propertiesBySignature[signature] = property;                    
+                    var signature = MethodFinder.GenerateSignature(item.BaseInfo.SetMethod);
+                    propertiesBySignature[signature] = item.RealInfo;
                 }
             }
         }

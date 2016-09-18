@@ -7,7 +7,7 @@ using NUnit.Framework;
 namespace SexyProxy.Fody.Tests
 {
     [TestFixture]
-    public class GenericsTests 
+    public class GenericsTests
     {
         [Test]
         public async void Get()
@@ -45,11 +45,15 @@ namespace SexyProxy.Fody.Tests
             public string LastName { get; set; }
         }
 
+
         [Proxy]
-        private interface ICrudApi<T> 
+        private interface ICrudApi<T>
         {
             Task<T> Get(int id);
             Task<T[]> GetAll();
+            Task Post(T entity);
+            Task Put(int id, T entity);
+            Task Delete(int id);
         }
 
         public class Foo<T>
