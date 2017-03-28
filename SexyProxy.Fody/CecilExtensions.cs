@@ -92,7 +92,7 @@ namespace SexyProxy.Fody
 
                 foreach (var @interface in current.Interfaces)
                 {
-                    queue.Enqueue(@interface.Resolve());
+                    queue.Enqueue(@interface.InterfaceType.Resolve());
                 }
             }
 
@@ -117,7 +117,7 @@ namespace SexyProxy.Fody
         public static bool IsDefined(this AssemblyDefinition assembly, TypeReference attributeType)
         {
             var typeIsDefined = assembly.HasCustomAttributes && assembly.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
-            return typeIsDefined;            
+            return typeIsDefined;
         }
 
         public static IEnumerable<CustomAttribute> GetCustomAttributes(this AssemblyDefinition assembly, TypeReference attributeType)
@@ -128,7 +128,7 @@ namespace SexyProxy.Fody
         public static bool IsDefined(this ModuleDefinition module, TypeReference attributeType)
         {
             var typeIsDefined = module.HasCustomAttributes && module.CustomAttributes.Any(x => x.AttributeType.FullName == attributeType.FullName);
-            return typeIsDefined;            
+            return typeIsDefined;
         }
 
         public static IEnumerable<CustomAttribute> GetCustomAttributes(this ModuleDefinition module, TypeReference attributeType)
@@ -149,7 +149,7 @@ namespace SexyProxy.Fody
         public static FieldReference Bind(this FieldReference field, GenericInstanceType genericType)
         {
             var reference = new FieldReference(field.Name, field.FieldType, genericType);
-            return reference;            
+            return reference;
         }
 
         public static MethodReference Bind(this MethodReference method, GenericInstanceType genericType)
@@ -292,7 +292,7 @@ namespace SexyProxy.Fody
                 il.Emit(OpCodes.Dup);
             }
 
-            // Set each element 
+            // Set each element
             for (int i = 0; i < parameterTypes.Length; i++)
             {
                 il.Emit(OpCodes.Ldc_I4, i);
@@ -334,7 +334,7 @@ namespace SexyProxy.Fody
             {
                 if (current is GenericInstanceType && ((GenericInstanceType)current).Resolve().GetElementType().CompareTo(taskTType))
                     return ((GenericInstanceType)current).GenericArguments.Single();
-                current = current.Resolve().BaseType;                
+                current = current.Resolve().BaseType;
             }
             throw new Exception("Type " + type.FullName + " is not an instance of Task<T>");
         }
@@ -472,7 +472,7 @@ namespace SexyProxy.Fody
             {
                 var newParameter = new ParameterDefinition(parameter.Name, parameter.Attributes, parameter.ParameterType);
                 destination.Parameters.Add(newParameter);
-            }            
+            }
         }
 
         public static void CopyGenericParameters(this IGenericParameterProvider source, IGenericParameterProvider destination)

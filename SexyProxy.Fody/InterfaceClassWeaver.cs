@@ -33,7 +33,7 @@ namespace SexyProxy.Fody
             var result = base.GetMethods();
 
             // If T is an interface type, we want to implement *all* the methods defined by the interface and its parent interfaces.
-            result = result.Concat(SourceType.Interfaces.SelectMany(x => x.Resolve().Methods.Where(y => !y.IsStatic)));
+            result = result.Concat(SourceType.Interfaces.SelectMany(x => x.InterfaceType.Resolve().Methods.Where(y => !y.IsStatic)));
 
             return result;
         }

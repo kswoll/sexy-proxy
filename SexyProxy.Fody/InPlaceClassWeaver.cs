@@ -44,7 +44,7 @@ namespace SexyProxy.Fody
             else
             {
                 staticConstructor.Body.Instructions.RemoveAt(staticConstructor.Body.Instructions.Count - 1);
-            }            
+            }
             return staticConstructor;
         }
 
@@ -77,7 +77,7 @@ namespace SexyProxy.Fody
 
             protected override void ProxyMethod(MethodBody body, MethodReference proceedTargetMethod)
             {
-                if (Method.ReturnType.CompareTo(ClassWeaver.Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler") 
+                if (Method.ReturnType.CompareTo(ClassWeaver.Context.InvocationHandlerType) && Method.Name == "get_InvocationHandler")
                     return;
                 if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(ClassWeaver.Context.InvocationHandlerType))
                     return;
@@ -109,7 +109,7 @@ namespace SexyProxy.Fody
                     foreach (var variable in Method.Body.Variables)
                     {
                         originalMethod.Body.InitLocals = true;
-                        originalMethod.Body.Variables.Add(new VariableDefinition(variable.Name, variable.VariableType));
+                        originalMethod.Body.Variables.Add(new VariableDefinition(variable.VariableType));
                     }
                     foreach (var handler in Method.Body.ExceptionHandlers)
                     {
@@ -122,8 +122,8 @@ namespace SexyProxy.Fody
                             il.Append(instruction);
                         }
                     });
-                    ClassWeaver.ProxyType.Methods.Add(originalMethod);                
-                
+                    ClassWeaver.ProxyType.Methods.Add(originalMethod);
+
                     return originalMethod;
                 }
             }

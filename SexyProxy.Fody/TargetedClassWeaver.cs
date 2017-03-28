@@ -33,8 +33,8 @@ namespace SexyProxy.Fody
 
         protected override TypeDefinition GetProxyType()
         {
-            var visibility = SourceType.Attributes & (TypeAttributes.Public | TypeAttributes.NestedPrivate | 
-                TypeAttributes.NestedFamily | TypeAttributes.NestedAssembly | TypeAttributes.NestedPublic | 
+            var visibility = SourceType.Attributes & (TypeAttributes.Public | TypeAttributes.NestedPrivate |
+                TypeAttributes.NestedFamily | TypeAttributes.NestedAssembly | TypeAttributes.NestedPublic |
                 TypeAttributes.NestedFamANDAssem | TypeAttributes.NestedFamORAssem);
             var name = SourceType.Name.Split('`')[0] + "$Proxy";
             if (SourceType.GenericParameters.Any())
@@ -44,7 +44,7 @@ namespace SexyProxy.Fody
             type.BaseType = GetBaseType(type.GenericParameters.ToArray());
             var intfs = GetInterfaces(type.GenericParameters.ToArray());
             foreach (var intf in intfs)
-                type.Interfaces.Add(intf);
+                type.Interfaces.Add(new InterfaceImplementation(intf));
             return type;
         }
 
@@ -65,7 +65,7 @@ namespace SexyProxy.Fody
 
         protected virtual void CreateConstructor()
         {
-            // Create constructor 
+            // Create constructor
             var constructorWithTarget = new MethodDefinition(".ctor", MethodAttributes.Public | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName, Context.ModuleDefinition.TypeSystem.Void);
             constructorWithTarget.Parameters.Add(new ParameterDefinition(Context.ModuleDefinition.Import(GetSourceType())));
             constructorWithTarget.Parameters.Add(new ParameterDefinition(Context.InvocationHandlerType));
@@ -76,8 +76,8 @@ namespace SexyProxy.Fody
                 il.EmitDefaultBaseConstructorCall(ProxyType);
                 il.Emit(OpCodes.Ldarg_0);  // Put "this" on the stack for the subsequent stfld instruction way below
                 il.Emit(OpCodes.Ldarg_1);  // Put "target" argument on the stack
-                il.Emit(OpCodes.Stfld, Target);                
-    
+                il.Emit(OpCodes.Stfld, Target);
+
                 il.Emit(OpCodes.Ldarg_0);                      // Load "this" for subsequent call to stfld
                 il.Emit(OpCodes.Ldarg_2);                      // Load the 2nd argument, which is the invocation handler
                 il.Emit(OpCodes.Stfld, InvocationHandler);     // Store it in the invocationHandler field

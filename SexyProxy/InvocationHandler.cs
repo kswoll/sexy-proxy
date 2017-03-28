@@ -21,7 +21,7 @@ namespace SexyProxy
 
         /// <summary>
         /// Provides a handler that works for non-async methods only.  This is useful if you want to avoid the async
-        /// overhead in scenarios where you know you don't want to handle async methods anyway.  
+        /// overhead in scenarios where you know you don't want to handle async methods anyway.
         /// </summary>
         public InvocationHandler(Func<Invocation, object> handler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null)
         {
@@ -40,7 +40,10 @@ namespace SexyProxy
             if (asyncHandler != null)
                 task = asyncHandler(invocation);
             else
-                task = Task.FromResult(handler(invocation));
+                task = invocation.Proceed();
+            if (!typeof(Task).IsAssignableFrom(invocation.Method.ReturnType) && !task.IsCompleted)
+                throw new InvalidAsyncException(
+                    "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type");
             return task;
         }
 
