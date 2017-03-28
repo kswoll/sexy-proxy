@@ -12,7 +12,7 @@
     <copyright>Copyright 2015</copyright>
     <tags>sexy-proxy fody</tags>
     <dependencies>
-      <dependency id="Fody" version="1.29" />
+      <dependency id="KirkFody" version="2.0" />
     </dependencies>
   </metadata>
 </package>
