@@ -40,7 +40,7 @@ namespace SexyProxy
             if (asyncHandler != null)
                 task = asyncHandler(invocation);
             else
-                task = invocation.Proceed();
+                task = Task.FromResult(handler(invocation));
             if (!typeof(Task).IsAssignableFrom(invocation.Method.ReturnType) && !task.IsCompleted)
                 throw new InvalidAsyncException(
                     "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type");
