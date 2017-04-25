@@ -82,6 +82,9 @@ namespace SexyProxy.Fody
                 if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(ClassWeaver.Context.InvocationHandlerType))
                     return;
 
+                // Erase scope since the body is being moved into the $Original method
+                Method.DebugInformation.Scope = null;
+
                 Method.Body = body = new MethodBody(Method);
 
                 base.ProxyMethod(body, proceedTargetMethod);

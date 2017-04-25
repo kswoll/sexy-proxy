@@ -50,7 +50,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = new TestClass(x => Task.FromResult<object>(x.Arguments[0].ToString()));
             var result = proxy.Alter(2);
-            Assert.AreEqual("2", result);            
+            Assert.AreEqual("2", result);
         }
 
         [Test]
@@ -108,7 +108,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = Proxy.CreateProxy<SetInvocationHandler>(x => Task.FromResult<object>("foo"));
             var result = proxy.NoChange(0);
-            Assert.AreEqual("foo", result);            
+            Assert.AreEqual("foo", result);
         }
 
         public abstract class SetInvocationHandler : IProxy, ISetInvocationHandler
@@ -123,7 +123,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = Proxy.CreateProxy<AsyncClass>(async x => "foo" + await x.Proceed());
             var result = await proxy.AsyncMethod(0);
-            Assert.AreEqual("foofoo", result);            
+            Assert.AreEqual("foofoo", result);
         }
 
         public class AsyncClass : IProxy, ISetInvocationHandler
@@ -142,7 +142,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = Proxy.CreateProxy<ClassWithPrivateMethod>(async x => "foo" + await x.Proceed());
             var result = proxy.PublicMethod("foo");
-            Assert.AreEqual("foofoofoo", result);                        
+            Assert.AreEqual("foofoofoo", result);
         }
 
         // ReSharper disable once ClassNeverInstantiated.Local
@@ -166,7 +166,7 @@ namespace SexyProxy.Fody.Tests
         {
             var proxy = Proxy.CreateProxy<ClassWithOverloads>(async x => "foo" + await x.Proceed());
             var result = proxy.Method("foo");
-            Assert.AreEqual("foofoofoo2", result);                        
+            Assert.AreEqual("foofoofoo2", result);
         }
 
         private class ClassWithOverloads : IProxy, ISetInvocationHandler
@@ -183,7 +183,7 @@ namespace SexyProxy.Fody.Tests
                 return s + "foo2";
             }
 
-            public string Method2<T, U>(T s) 
+            public string Method2<T, U>(T s)
             {
                 return s + "foo3";
             }
@@ -231,6 +231,22 @@ namespace SexyProxy.Fody.Tests
             }
 
             public string Foo { get; set; }
+        }
+
+        public class ProxyMethodWithVariableClass : IProxy
+        {
+            public ProxyMethodWithVariableClass()
+            {
+            }
+
+            void ProxyMethodWithVariableClassMethod()
+            {
+                // This method is proxied, and this variable causes trouble
+//                var s = "bar";
+//                Console.WriteLine(s);
+            }
+
+            public InvocationHandler InvocationHandler { get; }
         }
     }
 }
