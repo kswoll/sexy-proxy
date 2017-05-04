@@ -64,9 +64,11 @@ namespace SexyProxy.Fody.Tests
         [Test]
         public void StringProperty()
         {
-            var proxy = new TestClass(x => Task.FromResult<object>("foo"));
+            var proxy = new TestClass(x => Task.FromResult<object>("bar"));
+            var proxy2 = new TestClass(x => x.Proceed());
             var result = proxy.StringProperty;
-            Assert.AreEqual("foo", result);
+            proxy2.NoChange(5);
+            Assert.AreEqual("bar", result);
         }
 
         public class TestClass : IProxy

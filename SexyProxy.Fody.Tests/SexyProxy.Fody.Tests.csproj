@@ -62,6 +62,7 @@
     <Compile Include="IHandWritten.cs" />
     <Compile Include="InPlaceProxyTests.cs" />
     <Compile Include="InterfacePropertyTests.cs" />
+    <Compile Include="InvocationHandlerTests.cs" />
     <Compile Include="MethodFinderTests.cs" />
     <Compile Include="MethodWithVariable.cs" />
     <Compile Include="OverloadTests.cs" />

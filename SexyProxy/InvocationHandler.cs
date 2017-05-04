@@ -9,14 +9,16 @@ namespace SexyProxy
         private Func<Invocation, Task<object>> asyncHandler;
         private Func<Invocation, object> handler;
         private Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate;
+        private AsyncInvocationMode asyncMode;
 
         /// <summary>
         /// Provides a handler for all methods, async or otherwise.
         /// </summary>
-        public InvocationHandler(Func<Invocation, Task<object>> asyncHandler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null)
+        public InvocationHandler(Func<Invocation, Task<object>> asyncHandler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null, AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
             this.asyncHandler = asyncHandler;
             this.proxyPredicate = proxyPredicate ?? ((x, method, property) => true);
+            this.asyncMode = asyncMode;
         }
 
         /// <summary>
@@ -41,9 +43,19 @@ namespace SexyProxy
                 task = asyncHandler(invocation);
             else
                 task = Task.FromResult(handler(invocation));
+
             if (!typeof(Task).IsAssignableFrom(invocation.Method.ReturnType) && !task.IsCompleted)
-                throw new InvalidAsyncException(
-                    "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type");
+            {
+                switch (asyncMode)
+                {
+                    case AsyncInvocationMode.Throw:
+                        throw new InvalidAsyncException(
+                            "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type");
+                    case AsyncInvocationMode.Wait:
+                        task.Wait();
+                        break;
+                }
+            }
             return task;
         }
 
