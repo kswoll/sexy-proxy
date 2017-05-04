@@ -50,7 +50,7 @@ namespace SexyProxy
                 {
                     case AsyncInvocationMode.Throw:
                         throw new InvalidAsyncException(
-                            "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type");
+                            "Cannot use async tasks (await) in proxy handler for methods with a non-Task return-type. To force a synchronous wait, pass in AsyncInvocationMode.Wait when creating your proxy or InvocationHandler.");
                     case AsyncInvocationMode.Wait:
                         task.Wait();
                         break;
