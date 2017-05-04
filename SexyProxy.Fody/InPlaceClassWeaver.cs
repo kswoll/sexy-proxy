@@ -82,9 +82,6 @@ namespace SexyProxy.Fody
                 if (Method.Name == "set_InvocationHandler" && Method.Parameters.Count == 1 && Method.Parameters.Single().ParameterType.CompareTo(ClassWeaver.Context.InvocationHandlerType))
                     return;
 
-                // Erase scope since the body is being moved into the $Original method
-                Method.DebugInformation.Scope = null;
-
                 Method.Body = body = new MethodBody(Method);
 
                 base.ProxyMethod(body, proceedTargetMethod);
@@ -108,6 +105,13 @@ namespace SexyProxy.Fody
                     Method.CustomAttributes.Add(new CustomAttribute(ClassWeaver.Context.OriginalMethodAttributeConstructor) { ConstructorArguments = { new CustomAttributeArgument(ClassWeaver.Context.ModuleDefinition.TypeSystem.String, originalMethod.Name) }});
                     Method.CopyParameters(originalMethod);
                     Method.CopyGenericParameters(originalMethod);
+
+                    originalMethod.DebugInformation.Scope = Method.DebugInformation.Scope;
+                    originalMethod.DebugInformation.StateMachineKickOffMethod = Method.DebugInformation.StateMachineKickOffMethod;
+                    foreach (var sequencePoint in Method.DebugInformation.SequencePoints)
+                    {
+                        originalMethod.DebugInformation.SequencePoints.Add(sequencePoint);
+                    }
                     originalMethod.Body = new MethodBody(originalMethod);
                     foreach (var variable in Method.Body.Variables)
                     {
@@ -126,6 +130,11 @@ namespace SexyProxy.Fody
                         }
                     });
                     ClassWeaver.ProxyType.Methods.Add(originalMethod);
+
+                    // Erase scope since the body is being moved into the $Original method
+                    Method.DebugInformation.Scope = null;
+                    Method.DebugInformation.StateMachineKickOffMethod = null;
+                    Method.DebugInformation.SequencePoints.Clear();
 
                     return originalMethod;
                 }
