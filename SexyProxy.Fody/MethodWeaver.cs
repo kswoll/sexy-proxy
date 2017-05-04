@@ -171,7 +171,7 @@ namespace SexyProxy.Fody
             EmitCallToInvocationHandler(il, methodInfoField, propertyInfoField, proceed);
 
             // Return
-            il.Emit(OpCodes.Ret);            
+            il.Emit(OpCodes.Ret);
         }
 
         private void ImplementOptOut(ILProcessor il, MethodReference proceedTargetMethod)
@@ -192,7 +192,7 @@ namespace SexyProxy.Fody
                 genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(Method.GenericParameters.Select(x => x.ResolveGenericParameter(null)).ToArray());
 
             il.Emit(GetProceedCallOpCode(), genericProceedTargetMethod);
-            il.Emit(OpCodes.Ret);                    
+            il.Emit(OpCodes.Ret);
         }
 
         protected void EmitCallToInvocationHandler(ILProcessor il, FieldReference methodInfoField, FieldReference propertyInfoField, MethodReference proceed)
@@ -251,7 +251,7 @@ namespace SexyProxy.Fody
                     il.Emit(OpCodes.Box, Import(parameterInfos[i].ParameterType));
 
                 il.Emit(OpCodes.Stelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);  // Set array at index to element value
-            }            
+            }
         }
 
         protected virtual OpCode GetProceedCallOpCode()
@@ -300,7 +300,7 @@ namespace SexyProxy.Fody
             // Decompose array into arguments
             for (int i = 0; i < parameterInfos.Count; i++)
             {
-                il.Emit(OpCodes.Ldarg_0);                                                    // Push array 
+                il.Emit(OpCodes.Ldarg_0);                                                    // Push array
                 il.Emit(OpCodes.Call, ClassWeaver.Context.InvocationGetArguments);           // invocation.Arguments
                 il.Emit(OpCodes.Ldc_I4, i);                                                  // Push element index
                 il.Emit(OpCodes.Ldelem_Any, ClassWeaver.Context.ModuleDefinition.TypeSystem.Object);     // Get element
@@ -315,7 +315,7 @@ namespace SexyProxy.Fody
                 genericProceedTargetMethod = genericProceedTargetMethod.MakeGenericMethod(Method.GenericParameters.Select(x => x.ResolveGenericParameter(ProceedClass)).ToArray());
 
             il.Emit(proceedOpCode, genericProceedTargetMethod);
-            il.Emit(OpCodes.Ret);                    
+            il.Emit(OpCodes.Ret);
         }
 
         private void SetUpTypes()
@@ -358,7 +358,7 @@ namespace SexyProxy.Fody
                     InvocationConstructor = ClassWeaver.Context.VoidAsyncInvocationConstructor;
                     InvokeMethod = ClassWeaver.Context.AsyncVoidInvokeMethod;
                 }
-            }            
-        }                
+            }
+        }
     }
 }
