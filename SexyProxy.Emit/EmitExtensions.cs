@@ -12,6 +12,7 @@ namespace SexyProxy.Emit
             new[] { typeof(string), typeof(BindingFlags), typeof(Binder), typeof(Type[]), typeof(ParameterModifier[]) });
         private static readonly MethodInfo typeGetProperty = typeof(Type).GetMethod("GetProperty",
             new[] { typeof(string), typeof(BindingFlags), typeof(Binder), typeof(Type), typeof(Type[]), typeof(ParameterModifier[]) });
+        private static readonly MethodInfo makeByRefTypeMethod = typeof(Type).GetMethod("MakeByRefType");
 
         public static void EmitDefaultBaseConstructorCall(this ILGenerator il, Type baseType)
         {
@@ -29,8 +30,17 @@ namespace SexyProxy.Emit
 
         public static void LoadType(this ILGenerator il, Type type)
         {
-            il.Emit(OpCodes.Ldtoken, type);
-            il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
+            if (type.IsByRef)
+            {
+                il.Emit(OpCodes.Ldtoken, type.GetElementType());
+                il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
+                il.Emit(OpCodes.Callvirt, makeByRefTypeMethod);
+            }
+            else
+            {
+                il.Emit(OpCodes.Ldtoken, type);
+                il.Emit(OpCodes.Call, getTypeFromRuntimeHandleMethod);
+            }
         }
 
         public static void StoreMethodInfo(this ILGenerator il, FieldBuilder staticField, MethodInfo method)
