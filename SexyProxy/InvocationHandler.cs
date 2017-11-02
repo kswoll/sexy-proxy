@@ -68,16 +68,6 @@ namespace SexyProxy
             {
                 throw new InvalidAsyncException($"The invocation returned {task.Result ?? "null"}, but {invocation.Method.DeclaringType.FullName}.{invocation.Method.Name} expected an instance of {typeof(T)}");
             }
-            if (task.Status == TaskStatus.Faulted)
-            {
-                Exception exception = task.Exception;
-
-                // Try to unwrap the AggregateException
-                if (task.Exception.InnerExceptions.Count == 1)
-                    exception = task.Exception.InnerExceptions.Single();
-
-                ExceptionDispatchInfo.Capture(exception).Throw();
-            }
             var result = await task;
             return (T)result;
         }
