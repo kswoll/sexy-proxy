@@ -32,7 +32,7 @@ namespace SexyProxy.Emit.Tests
 
         public class HelloWorldPrinter
         {
-            public async virtual Task SayHello(TextWriter writer)
+            public virtual async Task SayHello(TextWriter writer)
             {
                 await writer.WriteAsync("Hello World!");
             }
