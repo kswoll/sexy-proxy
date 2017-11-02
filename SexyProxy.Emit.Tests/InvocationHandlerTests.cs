@@ -22,9 +22,24 @@ namespace SexyProxy.Emit.Tests
             }
         }
 
+        [Test]
+        public async Task NullObjectReturnedForStringDoesNotThrow()
+        {
+            var obj = Proxy.CreateProxy<IBoolMethod>(invocation => Task.FromResult<object>(null));
+            try
+            {
+                await obj.StringMethod();
+            }
+            catch (InvalidAsyncException)
+            {
+                Assert.Fail("Expected InvalidAsyncException to have been thrown");
+            }
+        }
+
         public interface IBoolMethod
         {
             Task<bool> BoolMethod();
+            Task<string> StringMethod();
         }
     }
 }
