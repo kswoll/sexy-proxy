@@ -64,7 +64,8 @@ namespace SexyProxy
         public async Task<T> AsyncInvokeT<T>(AsyncInvocationT<T> invocation)
         {
             var task = GetTask(invocation);
-            if (task.Status == TaskStatus.RanToCompletion && !(task.Result is T))
+
+            if (task.Status == TaskStatus.RanToCompletion && (!(task.Result is T) || (task.Result == null && typeof(T).IsValueType)))
             {
                 throw new InvalidAsyncException($"The invocation returned {task.Result ?? "null"}, but {invocation.Method.DeclaringType.FullName}.{invocation.Method.Name} expected an instance of {typeof(T)}");
             }
