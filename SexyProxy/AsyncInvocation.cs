@@ -4,12 +4,12 @@ using System.Threading.Tasks;
 
 namespace SexyProxy
 {
-    public abstract class AsyncInvocation : InvocationBase
+    public abstract class AsyncInvocation : InvocationBase, IAsyncInvocation
     {
         public abstract Task<object> Proceed();
 
-        protected AsyncInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments)
-            : base(proxy, invocationHandler, method, property, arguments)
+        protected AsyncInvocation(object proxy, MethodInfo method, PropertyInfo property, object[] arguments)
+            : base(proxy, method, property, arguments)
         {
         }
     }
@@ -20,7 +20,7 @@ namespace SexyProxy
 
         private Func<AsyncInvocation, T> implementation;
 
-        public AsyncInvocationT(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments, Func<AsyncInvocation, T> implementation) : base(proxy, invocationHandler, method, property, arguments)
+        public AsyncInvocationT(object proxy, MethodInfo method, PropertyInfo property, object[] arguments, Func<AsyncInvocation, T> implementation) : base(proxy, method, property, arguments)
         {
             this.implementation = implementation;
         }

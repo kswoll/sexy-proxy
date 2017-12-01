@@ -10,11 +10,6 @@ namespace SexyProxy
         public object Proxy { get; }
 
         /// <summary>
-        /// The handler that is intercepting the call to the method
-        /// </summary>
-        public InvocationHandler InvocationHandler { get; }
-
-        /// <summary>
         /// The method that was invoked that the InvocationHandler will handle
         /// </summary>
         public MethodInfo Method { get; }
@@ -31,10 +26,9 @@ namespace SexyProxy
 
         public abstract InvocationFlags Flags { get; }
 
-        protected InvocationBase(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments)
+        protected InvocationBase(object proxy, MethodInfo method, PropertyInfo property, object[] arguments)
         {
             Proxy = proxy;
-            InvocationHandler = invocationHandler;
             Method = method;
             Property = property;
             Arguments = arguments;

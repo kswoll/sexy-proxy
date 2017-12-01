@@ -10,7 +10,7 @@ namespace SexyProxy.Emit.Tests
         public async void GetStringAsync()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 await Task.Delay(1);
                 var returnValue = await invocation.Proceed();
@@ -24,7 +24,7 @@ namespace SexyProxy.Emit.Tests
         public void GetString()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 var returnValue = await invocation.Proceed();
                 return (string)returnValue + "test";
@@ -37,7 +37,7 @@ namespace SexyProxy.Emit.Tests
         public void GetStringThrowsExcpetionIfAsync()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 await Task.Delay(1);
                 var returnValue = await invocation.Proceed();
@@ -57,7 +57,7 @@ namespace SexyProxy.Emit.Tests
         public async void DoSomethingAsync()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 await Task.Delay(1);
                 await invocation.Proceed();
@@ -71,7 +71,7 @@ namespace SexyProxy.Emit.Tests
         public void DoSomething()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 await invocation.Proceed();
                 return null;
@@ -84,7 +84,7 @@ namespace SexyProxy.Emit.Tests
         public void Sum()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 var value = (int)await invocation.Proceed();
                 return value + 3;
@@ -97,7 +97,7 @@ namespace SexyProxy.Emit.Tests
         public async void SumAsync()
         {
             var handWritten = new HandWritten();
-            var proxy = Proxy.CreateProxy(handWritten, async invocation =>
+            var proxy = Proxy.CreateProxyAsync(handWritten, async invocation =>
             {
                 var value = (int)await invocation.Proceed();
                 return value + 3;

@@ -1,17 +1,15 @@
-﻿using System;
-using System.Net.Http;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using NUnit.Framework;
 
 namespace SexyProxy.Emit.Tests
 {
     [TestFixture]
-    public class GenericsTests 
+    public class GenericsTests
     {
         [Test]
         public async void Get()
         {
-            var proxy = Proxy.CreateProxy<ICrudApi<User>>(async invocation =>
+            var proxy = Proxy.CreateProxyAsync<ICrudApi<User>>(async invocation =>
             {
                 await invocation.Proceed();
                 var id = (int)invocation.Arguments[0];
@@ -30,7 +28,7 @@ namespace SexyProxy.Emit.Tests
             public string LastName { get; set; }
         }
 
-        public interface ICrudApi<T> 
+        public interface ICrudApi<T>
         {
             Task<T> Get(int id);
             Task<T[]> GetAll();

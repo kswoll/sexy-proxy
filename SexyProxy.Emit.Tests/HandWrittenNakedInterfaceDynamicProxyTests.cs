@@ -9,7 +9,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public async void GetStringAsync()
         {
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 await Task.Delay(1);
                 var returnValue = await invocation.Proceed();
@@ -22,7 +22,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public void GetString()
         {
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 var returnValue = await invocation.Proceed();
                 return (string)returnValue + "test";
@@ -34,7 +34,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public void GetStringThrowsExcpetionIfAsync()
         {
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 await Task.Delay(1);
                 var returnValue = await invocation.Proceed();
@@ -54,7 +54,7 @@ namespace SexyProxy.Emit.Tests
         public async void DoSomethingAsync()
         {
             var doSomethingAsyncCalled = false;
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 await Task.Delay(1);
                 await invocation.Proceed();
@@ -69,7 +69,7 @@ namespace SexyProxy.Emit.Tests
         public void DoSomething()
         {
             var doSomethingCalled = false;
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 await invocation.Proceed();
                 doSomethingCalled = true;
@@ -82,7 +82,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public void Sum()
         {
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 var value = (int)await invocation.Proceed();
                 return value + 3;
@@ -94,7 +94,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public async void SumAsync()
         {
-            var proxy = Proxy.CreateProxy<IHandWritten>(null, async invocation =>
+            var proxy = Proxy.CreateProxyAsync<IHandWritten>(null, async invocation =>
             {
                 var value = (int)await invocation.Proceed();
                 return value + 3;

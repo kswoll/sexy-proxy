@@ -9,7 +9,7 @@ namespace SexyProxy.Emit.Tests
         [Test]
         public async void AbstractMethod()
         {
-            var proxy = Proxy.CreateProxy<BaseClass>(async invocation =>
+            var proxy = Proxy.CreateProxyAsync<BaseClass>(async invocation =>
             {
                 var baseValue = await invocation.Proceed();
                 return baseValue + "Test";

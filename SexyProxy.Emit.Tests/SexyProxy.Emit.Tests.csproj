@@ -51,7 +51,7 @@
     <Compile Include="HandWrittenBaseNoTargetDynamicProxyTests.cs" />
     <Compile Include="HandWrittenBaseWithDynamicProxyTests.cs" />
     <Compile Include="HandWrittenNakedInterfaceDynamicProxyTests.cs" />
-    <Compile Include="HandWrittenProxy.cs" />
+    <Compile Include="HandWrittenProxyAsync.cs" />
     <Compile Include="HandWrittenProxyTests.cs" />
     <Compile Include="HandWrittenWithDynamicProxyTests.cs" />
     <Compile Include="IHandWritten.cs" />

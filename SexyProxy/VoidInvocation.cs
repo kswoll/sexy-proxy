@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Reflection;
-using System.Threading.Tasks;
 
 namespace SexyProxy
 {
@@ -10,7 +9,7 @@ namespace SexyProxy
 
         private Action<Invocation> implementation;
 
-        public VoidInvocation(object proxy, InvocationHandler invocationHandler, MethodInfo method, PropertyInfo property, object[] arguments, Action<Invocation> implementation) : base(proxy, invocationHandler, method, property, arguments)
+        public VoidInvocation(object proxy, MethodInfo method, PropertyInfo property, object[] arguments, Action<Invocation> implementation) : base(proxy, method, property, arguments)
         {
             this.implementation = implementation;
         }

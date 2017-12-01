@@ -2,12 +2,12 @@
 
 namespace SexyProxy.Emit.Tests
 {
-    public class HandWrittenProxy : IHandWritten
+    public class HandWrittenProxyAsync : IHandWritten
     {
         private IHandWritten target;
-        private InvocationHandler invocationHandler;
+        private AsyncInvocationHandler invocationHandler;
 
-        public HandWrittenProxy(IHandWritten target, InvocationHandler invocationHandler)
+        public HandWrittenProxyAsync(IHandWritten target, AsyncInvocationHandler invocationHandler)
         {
             this.target = target;
             this.invocationHandler = invocationHandler;
@@ -17,7 +17,7 @@ namespace SexyProxy.Emit.Tests
         {
             var method = typeof(IHandWritten).GetMethod("GetStringAsync");
             var arguments = new object[0];
-            var invocation = new AsyncInvocationT<string>(this, invocationHandler, method, null, arguments, args => target.GetStringAsync());
+            var invocation = new AsyncInvocationT<string>(this, method, null, arguments, args => target.GetStringAsync());
             return invocationHandler.AsyncInvokeT(invocation);
         }
 

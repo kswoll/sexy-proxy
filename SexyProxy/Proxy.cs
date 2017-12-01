@@ -76,7 +76,7 @@ namespace SexyProxy
         /// <param name="asyncMode">Controls what happens when an async invocation handler performs async related actions
         /// where the original method being proxied is not an async method.</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(T target, Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null,
+        public static T CreateProxyAsync<T>(T target, Func<IAsyncInvocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null,
             AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
             return Proxy<T>.CreateProxy(target, invocationHandler, predicate, asyncMode);
@@ -148,10 +148,10 @@ namespace SexyProxy
         /// <param name="asyncMode">Controls what happens when an async invocation handler performs async related actions
         /// where the original method being proxied is not an async method.</param>
         /// <returns>The new instance of the proxy that is an instance of T</returns>
-        public static T CreateProxy<T>(Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null,
+        public static T CreateProxyAsync<T>(Func<IAsyncInvocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate = null,
             AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
-            return CreateProxy(default(T), invocationHandler, predicate, asyncMode);
+            return CreateProxyAsync(default(T), invocationHandler, predicate, asyncMode);
         }
 
         /// <summary>
@@ -186,7 +186,7 @@ namespace SexyProxy
         private static bool isFodyProxy = FodyProxyTypeFactory.IsFodyProxy(typeof(T));
         private static Type proxyType = CreateProxyType();
 
-        public static T CreateProxy(T target, Func<InvocationBase, Task<object>> invocationHandler, ProxyPredicate<T> predicate,
+        public static T CreateProxy(T target, Func<IAsyncInvocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate,
             AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
             if (isSetAsyncInvocationHandler)
@@ -215,17 +215,12 @@ namespace SexyProxy
             }
             else if (isInPlace)
             {
-                return (T)Activator.CreateInstance(proxyType, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
+                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
             else
             {
-                return (T)Activator.CreateInstance(proxyType, target, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
+                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
-        }
-
-        public static T CreateProxy(T target, Func<Invocation, object> invocationHandler, ProxyPredicate<T> predicate)
-        {
-            return CreateProxy(target, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
         }
 
         public static T CreateProxy(T target, InvocationHandler invocationHandler)

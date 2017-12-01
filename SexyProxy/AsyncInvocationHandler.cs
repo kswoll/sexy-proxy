@@ -6,14 +6,14 @@ namespace SexyProxy
 {
     public class AsyncInvocationHandler
     {
-        private Func<InvocationBase, Task<object>> asyncHandler;
+        private Func<IAsyncInvocation, Task<object>> asyncHandler;
         private Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate;
         private AsyncInvocationMode asyncMode;
 
         /// <summary>
         /// Provides a handler for all methods, async or otherwise.
         /// </summary>
-        public AsyncInvocationHandler(Func<InvocationBase, Task<object>> asyncHandler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null, AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
+        public AsyncInvocationHandler(Func<IAsyncInvocation, Task<object>> asyncHandler, Func<object, MethodInfo, PropertyInfo, bool> proxyPredicate = null, AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
             this.asyncHandler = asyncHandler;
             this.proxyPredicate = proxyPredicate ?? ((x, method, property) => true);
@@ -25,7 +25,7 @@ namespace SexyProxy
             return proxyPredicate(proxy, method, property);
         }
 
-        private Task<object> GetTask(InvocationBase invocation)
+        private Task<object> GetTask(IAsyncInvocation invocation)
         {
             var task = asyncHandler(invocation);
 
