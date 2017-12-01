@@ -2,6 +2,6 @@
 {
     public interface ISetInvocationHandler
     {
-        InvocationHandler InvocationHandler { set; } 
+        InvocationHandler InvocationHandler { set; }
     }
 }

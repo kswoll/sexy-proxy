@@ -9,16 +9,20 @@
     <Import_RootNamespace>SexyProxy</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AsyncInvocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)AsyncInvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)AsyncInvocationMode.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DoNotProxyAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)FodyProxyTypeFactory.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvalidAsyncException.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Invocation.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)InvocationBase.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)InvocationFlags.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IReverseProxy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IProxyTypeFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ISetAsyncInvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ISetInvocationHandler.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)OriginalMethodAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Proxy.cs" />
@@ -26,7 +30,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)ProxyExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyForAttribute.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)ProxyPredicate.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)Reflection\AsyncInvocation.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\MethodFinder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Reflection\ReflectionUtils.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)VoidAsyncInvocation.cs" />

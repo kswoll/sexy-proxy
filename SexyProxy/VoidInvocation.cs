@@ -15,10 +15,10 @@ namespace SexyProxy
             this.implementation = implementation;
         }
 
-        public override Task<object> Proceed()
+        public override object Proceed()
         {
             implementation(this);
-            return Task.FromResult<object>(null);
+            return null;
         }
     }
 }

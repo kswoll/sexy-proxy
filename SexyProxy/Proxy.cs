@@ -181,26 +181,45 @@ namespace SexyProxy
     public static class Proxy<T>
     {
         private static bool isInPlace = typeof(IReverseProxy).IsAssignableFrom(typeof(T)) || typeof(IProxy).IsAssignableFrom(typeof(T));
+        private static bool isSetAsyncInvocationHandler = isInPlace && typeof(ISetAsyncInvocationHandler).IsAssignableFrom(typeof(T));
         private static bool isSetInvocationHandler = isInPlace && typeof(ISetInvocationHandler).IsAssignableFrom(typeof(T));
         private static bool isFodyProxy = FodyProxyTypeFactory.IsFodyProxy(typeof(T));
         private static Type proxyType = CreateProxyType();
 
-        public static T CreateProxy(T target, Func<Invocation, Task<object>> invocationHandler, ProxyPredicate<T> predicate,
+        public static T CreateProxy(T target, Func<InvocationBase, Task<object>> invocationHandler, ProxyPredicate<T> predicate,
             AsyncInvocationMode asyncMode = AsyncInvocationMode.Throw)
         {
-            if (isSetInvocationHandler)
+            if (isSetAsyncInvocationHandler)
             {
                 var result = (T)Activator.CreateInstance(proxyType);
-                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode);
+                ((ISetAsyncInvocationHandler)result).InvocationHandler = new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode);
                 return result;
             }
             else if (isInPlace)
             {
-                return (T)Activator.CreateInstance(proxyType, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode));
+                return (T)Activator.CreateInstance(proxyType, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode));
             }
             else
             {
-                return (T)Activator.CreateInstance(proxyType, target, new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode));
+                return (T)Activator.CreateInstance(proxyType, target, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property), asyncMode));
+            }
+        }
+
+        public static T CreateProxy(T target, Func<Invocation, object> invocationHandler, ProxyPredicate<T> predicate)
+        {
+            if (isSetInvocationHandler)
+            {
+                var result = (T)Activator.CreateInstance(proxyType);
+                ((ISetInvocationHandler)result).InvocationHandler = new InvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property));
+                return result;
+            }
+            else if (isInPlace)
+            {
+                return (T)Activator.CreateInstance(proxyType, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
+            }
+            else
+            {
+                return (T)Activator.CreateInstance(proxyType, target, new AsyncInvocationHandler(invocationHandler, predicate == null ? (Func<object, MethodInfo, PropertyInfo, bool>)null : (x, method, property) => predicate((T)x, method, property)));
             }
         }
 
