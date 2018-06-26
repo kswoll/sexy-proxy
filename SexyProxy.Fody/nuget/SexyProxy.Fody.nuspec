@@ -12,7 +12,9 @@
     <copyright>Copyright 2015</copyright>
     <tags>sexy-proxy fody</tags>
     <dependencies>
-      <dependency id="Fody" version="2.0" />
+      <group targetFramework=".NETFramework4.5">
+        <dependency id="Fody" version="2.0" />
+      </group>
     </dependencies>
   </metadata>
 </package>
