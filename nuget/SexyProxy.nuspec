@@ -11,5 +11,8 @@
     <description>Proxy library with support for async operations.</description>
     <copyright>Copyright 2015</copyright>
     <tags>sexy-proxy async proxy</tags>
+    <dependencyGroup>
+      <group targetFramework=".NETFramework4.5" />
+    </dependencyGroup>
   </metadata>
 </package>
