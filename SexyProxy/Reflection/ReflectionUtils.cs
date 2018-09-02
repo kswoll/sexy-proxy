@@ -3,7 +3,7 @@ using System.Reflection;
 
 namespace SexyProxy.Reflection
 {
-    static class ReflectionUtils
+    public static class ReflectionUtils
     {
         public static PropertyInfo GetProperty(this MethodInfo method)
         {

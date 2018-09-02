@@ -1,21 +1,18 @@
 ﻿using System;
+using System.Collections.Generic;
+using Fody;
 using Mono.Cecil;
 
 namespace SexyProxy.Fody
 {
-    public class ModuleWeaver
+    public class ModuleWeaver : BaseModuleWeaver
     {
-        public ModuleDefinition ModuleDefinition { get; set; }
+        public override IEnumerable<string> GetAssembliesForScanning()
+        {
+            return new[] { "netstandard", "mscorlib" };
+        }
 
-        // Will log an MessageImportance.High message to MSBuild. 
-        public Action<string> LogInfo  { get; set; }
-
-        // Will log an error message to MSBuild. OPTIONAL
-        public Action<string> LogError { get; set; }
-
-        public Action<string> LogWarning { get; set; }
-
-        public void Execute()
+        public override void Execute()
         {
             CecilExtensions.LogError = LogError;
             CecilExtensions.LogInfo = LogInfo;

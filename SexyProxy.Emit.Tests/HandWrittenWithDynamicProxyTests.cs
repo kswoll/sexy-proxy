@@ -7,7 +7,7 @@ namespace SexyProxy.Emit.Tests
     public class HandWrittenWithDynamicProxyTests
     {
         [Test]
-        public async void GetStringAsync()
+        public async Task GetStringAsync()
         {
             var handWritten = new HandWritten();
             var proxy = Proxy.CreateProxy<IHandWritten>(handWritten, async invocation =>
@@ -82,7 +82,7 @@ namespace SexyProxy.Emit.Tests
         }
 
         [Test]
-        public async void DoSomethingAsync()
+        public async Task DoSomethingAsync()
         {
             var handWritten = new HandWritten();
             var proxy = Proxy.CreateProxy<IHandWritten>(handWritten, async invocation =>
@@ -122,7 +122,7 @@ namespace SexyProxy.Emit.Tests
         }
 
         [Test]
-        public async void SumAsync()
+        public async Task SumAsync()
         {
             var handWritten = new HandWritten();
             var proxy = Proxy.CreateProxy<IHandWritten>(handWritten, async invocation =>

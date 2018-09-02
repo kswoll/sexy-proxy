@@ -10,7 +10,7 @@ namespace SexyProxy.Fody.Tests
     public class GenericsTests
     {
         [Test]
-        public async void Get()
+        public async Task Get()
         {
             var proxy = Proxy.CreateProxy<ICrudApi<User>>(async invocation =>
             {
@@ -25,7 +25,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void GetAll()
+        public async Task GetAll()
         {
             var proxy = Proxy.CreateProxy<ICrudApi<User>>(async invocation =>
             {

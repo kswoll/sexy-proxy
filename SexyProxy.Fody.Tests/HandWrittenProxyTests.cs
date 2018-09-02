@@ -8,7 +8,7 @@ namespace SexyProxy.Fody.Tests
     public class HandWrittenProxyTests
     {
         [Test]
-        public async void GetStringAsync()
+        public async Task GetStringAsync()
         {
             var handWritten = new HandWritten();
             var proxy = new HandWrittenProxy(handWritten, new InvocationHandler(async invocation =>
@@ -100,7 +100,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void DoSomethingAsync()
+        public async Task DoSomethingAsync()
         {
             var handWritten = new HandWritten();
             var proxy = new HandWrittenProxy(handWritten, new InvocationHandler(async invocation =>
@@ -140,7 +140,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void SumAsync()
+        public async Task SumAsync()
         {
             var handWritten = new HandWritten();
             var proxy = new HandWrittenProxy(handWritten, new InvocationHandler(async invocation =>

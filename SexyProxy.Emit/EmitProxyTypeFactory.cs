@@ -24,7 +24,7 @@ namespace SexyProxy.Emit
             string assemblyName = sourceType.Namespace + "." + sourceType.Name.Replace('`', '$') + "$Proxy";
 
             bool isIntf = sourceType.IsInterface;
-            var assembly = AppDomain.CurrentDomain.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
+            var assembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName(assemblyName), AssemblyBuilderAccess.Run);
             var module = assembly.DefineDynamicModule(assemblyName);
 
             var type = module.DefineType(assemblyName, TypeAttributes.Public);
@@ -44,7 +44,7 @@ namespace SexyProxy.Emit
             var target = type.DefineField("__target", targetType, FieldAttributes.Private);
             var invocationHandler = type.DefineField("__invocationHandler", typeof(InvocationHandler), FieldAttributes.Private);
 
-            // Create constructor 
+            // Create constructor
             var constructorWithTarget = type.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, new[] { sourceType, typeof(InvocationHandler) });
             var constructorWithTargetIl = constructorWithTarget.GetILGenerator();
             constructorWithTargetIl.EmitDefaultBaseConstructorCall(sourceType);
@@ -63,11 +63,11 @@ namespace SexyProxy.Emit
                 constructorWithTargetIl.MarkLabel(targetNotNull);               // Mark where the previous branch instruction should jump to
             }
 
-            // Store whatever is on the stack inside the "target" field.  The value is either: 
+            // Store whatever is on the stack inside the "target" field.  The value is either:
             // * The "target" argument passed in -- if not null.
             // * If null and T is an interface type, then it is a struct that implements that interface and returns default values for each method
             // * If null and T is not an interface type, then it is "this", where "proceed" will invoke the base implementation.
-            constructorWithTargetIl.Emit(OpCodes.Stfld, target);                
+            constructorWithTargetIl.Emit(OpCodes.Stfld, target);
 
             constructorWithTargetIl.Emit(OpCodes.Ldarg_0);                      // Load "this" for subsequent call to stfld
             constructorWithTargetIl.Emit(OpCodes.Ldarg_2);                      // Load the 2nd argument, which is the invocation handler
@@ -126,7 +126,7 @@ namespace SexyProxy.Emit
                     if (propertyInfo != null)
                     {
                         propertyInfoField = type.DefineField($"{methodInfo.Name}${(propertyInfo.GetMethod == methodInfo ? "Get" : "Set")}Info", typeof(PropertyInfo), FieldAttributes.Private | FieldAttributes.Static);
-                        staticIl.StorePropertyInfo(propertyInfoField, propertyInfo);                        
+                        staticIl.StorePropertyInfo(propertyInfoField, propertyInfo);
                     }
                 }
 
@@ -192,7 +192,7 @@ namespace SexyProxy.Emit
                         proceedIl.Emit(OpCodes.Ldfld, target);              // Load "target" from "this"
                         proceedIl.Emit(OpCodes.Brtrue, targetNotNull);      // If target is not null, jump below
                         DefaultInterfaceImplementationFactory.CreateDefaultMethodImplementation(methodInfo, proceedIl);
-                        proceedIl.MarkLabel(targetNotNull);                 // Mark where the previous branch instruction should jump to                        
+                        proceedIl.MarkLabel(targetNotNull);                 // Mark where the previous branch instruction should jump to
                     }
 
                     // Load target for subsequent call
@@ -213,7 +213,7 @@ namespace SexyProxy.Emit
                     }
 
                     proceedIl.Emit(proceedCall, methodInfo);
-                    proceedIl.Emit(OpCodes.Ret);                    
+                    proceedIl.Emit(OpCodes.Ret);
                 }
                 else
                 {
@@ -271,7 +271,7 @@ namespace SexyProxy.Emit
 
                     il.Emit(OpCodes.Stelem, typeof(object));            // Set array at index to element value
                 }
-                
+
                 // Load function pointer to proceed method
                 il.Emit(OpCodes.Ldarg_0);
                 il.Emit(OpCodes.Ldftn, proceed);
@@ -289,9 +289,9 @@ namespace SexyProxy.Emit
 
             staticIl.Emit(OpCodes.Ret);
 
-            var proxyType = type.CreateType();
+            var proxyType = type.CreateTypeInfo();
 
-            return proxyType;            
+            return proxyType;
         }
 
         private void ImplementOptOut(ILGenerator il, MethodInfo methodInfo, OpCode proceedCall, bool isIntf, FieldBuilder target)
@@ -309,7 +309,7 @@ namespace SexyProxy.Emit
             }
 
             il.Emit(proceedCall, methodInfo);
-            il.Emit(OpCodes.Ret);                    
+            il.Emit(OpCodes.Ret);
         }
     }
 }

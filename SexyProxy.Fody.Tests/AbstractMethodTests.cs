@@ -8,7 +8,7 @@ namespace SexyProxy.Fody.Tests
     public class AbstractMethodTests
     {
         [Test]
-        public async void AbstractMethod()
+        public async Task AbstractMethod()
         {
             var proxy = Proxy.CreateProxy<BaseClass>(async invocation =>
             {

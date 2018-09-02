@@ -8,7 +8,7 @@ namespace SexyProxy.Emit.Tests
     public class ReadMeTests
     {
         [Test]
-        public async void NoProxy()
+        public async Task NoProxy()
         {
             var writer = new StringWriter();
             await new HelloWorldPrinter().SayHello(writer);
@@ -16,7 +16,7 @@ namespace SexyProxy.Emit.Tests
         }
 
         [Test]
-        public async void WithProxy()
+        public async Task WithProxy()
         {
             var writer = new StringWriter();
             var printer = Proxy.CreateProxy<HelloWorldPrinter>(async invocation =>

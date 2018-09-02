@@ -1,4 +1,6 @@
 ﻿using System;
+using System.IO;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -31,6 +33,18 @@ namespace SexyProxy
     /// </summary>
     public static class Proxy
     {
+        internal static IProxyTypeFactory EmitProxyTypeFactory { get; }
+
+        static Proxy()
+        {
+            if (File.Exists(Path.Combine(Path.GetDirectoryName(typeof(Proxy).Assembly.Location), "SexyProxy.Emit.dll")))
+            {
+                var emitAssembly = Assembly.Load("SexyProxy.Emit");
+                var emitProxyTypeFactoryType = emitAssembly.GetType("SexyProxy.Emit.EmitProxyTypeFactory");
+                EmitProxyTypeFactory = (IProxyTypeFactory)Activator.CreateInstance(emitProxyTypeFactoryType);
+            }
+        }
+
         /// <summary>
         /// Creates a proxy for a given type.  This method supports two discrete usage scenarios.<p/>
         /// If T is an interface, the target should be an implementation of that interface. In
@@ -231,22 +245,19 @@ namespace SexyProxy
         {
             if (isInPlace)
                 return typeof(T);
-#if EMIT
             else if (isFodyProxy)
                 return new FodyProxyTypeFactory().CreateProxyType(typeof(T));
-            else
+            else if (Proxy.EmitProxyTypeFactory != null)
             {
-                var result = new EmitProxyTypeFactory().CreateProxyType(typeof(T));
+                var result = Proxy.EmitProxyTypeFactory.CreateProxyType(typeof(T));
                 if (result.ContainsGenericParameters)
                 {
                     result = result.MakeGenericType(typeof(T).GetGenericArguments());
                 }
                 return result;
             }
-#else
             else
                 throw new Exception("Emit generator is not available, so you must use Fody");
-#endif
         }
     }
 }

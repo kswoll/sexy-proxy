@@ -16,3 +16,8 @@ SexyProxy.Ios/obj/
 Weavers/bin/Weavers.dll
 Weavers/bin/Weavers.pdb
 _ReSharper.Caches/
+SexyProxy.Emit/bin/
+SexyProxy.Emit/obj/
+SexyProxy/bin/
+SexyProxy/obj/
+*.user

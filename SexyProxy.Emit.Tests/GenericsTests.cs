@@ -9,7 +9,7 @@ namespace SexyProxy.Emit.Tests
     public class GenericsTests 
     {
         [Test]
-        public async void Get()
+        public async Task Get()
         {
             var proxy = Proxy.CreateProxy<ICrudApi<User>>(async invocation =>
             {

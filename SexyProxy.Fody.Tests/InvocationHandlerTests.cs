@@ -35,6 +35,7 @@ namespace SexyProxy.Fody.Tests
             Assert.AreEqual(5, value);
         }
 
+        [Proxy]
         public interface IAsyncModeInterface
         {
             int Call();

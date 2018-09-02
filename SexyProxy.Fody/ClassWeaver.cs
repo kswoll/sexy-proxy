@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Linq;
+using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 
@@ -24,7 +25,7 @@ namespace SexyProxy.Fody
         {
             Context = context;
             SourceType = sourceType;
-            SourceTypeReference = context.ModuleDefinition.Import(sourceType);
+            SourceTypeReference = context.ModuleDefinition.ImportReference(sourceType);
         }
 
         protected virtual void InitializeProxyType()
@@ -74,7 +75,7 @@ namespace SexyProxy.Fody
                     continue;
                 }
 
-                // Generate a unique name for the method in the event of overloads.  
+                // Generate a unique name for the method in the event of overloads.
                 var name = methodInfo.Name.Split('.').Last();
                 int index;
                 if (uniqueNames.TryGetValue(name, out index))

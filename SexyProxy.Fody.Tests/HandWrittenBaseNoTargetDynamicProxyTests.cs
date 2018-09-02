@@ -7,7 +7,7 @@ namespace SexyProxy.Fody.Tests
     public class HandWrittenBaseNoTargetDynamicProxyTests
     {
         [Test]
-        public async void GetStringAsync()
+        public async Task GetStringAsync()
         {
             var proxy = Proxy.CreateProxy<HandWritten>(null, async invocation =>
             {
@@ -51,7 +51,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void DoSomethingAsync()
+        public async Task DoSomethingAsync()
         {
             var proxy = Proxy.CreateProxy<HandWritten>(null, async invocation =>
             {
@@ -88,7 +88,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void SumAsync()
+        public async Task SumAsync()
         {
             var proxy = Proxy.CreateProxy<HandWritten>(null, async invocation =>
             {

@@ -1,19 +1,19 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\packages\NUnit.3.10.1\build\NUnit.props" Condition="Exists('..\packages\NUnit.3.10.1\build\NUnit.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{92B910F1-66B2-4754-A0AE-67F5794775DA}</ProjectGuid>
+    <ProjectGuid>{F30557FD-80CB-4D97-BC3B-80766BDE947E}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>SexyProxy.Fody.Tests</RootNamespace>
     <AssemblyName>SexyProxy.Fody.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -23,7 +23,6 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <NoWarn>0626</NoWarn>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -34,9 +33,8 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="nunit.framework, Version=2.6.4.14350, Culture=neutral, PublicKeyToken=96d09a1eb7f44a77, processorArchitecture=MSIL">
-      <HintPath>..\packages\NUnit.2.6.4\lib\nunit.framework.dll</HintPath>
-      <Private>True</Private>
+    <Reference Include="nunit.framework, Version=3.10.1.0, Culture=neutral, PublicKeyToken=2638cd05610744eb, processorArchitecture=MSIL">
+      <HintPath>..\packages\NUnit.3.10.1\lib\net45\nunit.framework.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -65,48 +63,36 @@
     <Compile Include="InvocationHandlerTests.cs" />
     <Compile Include="MethodFinderTests.cs" />
     <Compile Include="MethodWithVariable.cs" />
+    <Compile Include="OutsideReferenceTests.cs" />
     <Compile Include="OverloadTests.cs" />
     <Compile Include="PredicatedProxyTests.cs" />
-    <Compile Include="ReverseProxyTests.cs" />
-    <Compile Include="OutsideReferenceTests.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ReverseProxyTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SexyProxy.Net45\SexyProxy.Net45.csproj">
-      <Project>{b1b59f56-bc70-42d6-a7b4-9a631912979f}</Project>
-      <Name>SexyProxy.Net45</Name>
-    </ProjectReference>
-    <ProjectReference Include="..\SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj">
-      <Project>{1CABBB15-9965-4E2D-A6F2-5B1D639EAF01}</Project>
-      <Name>SexyProxy.Tests.ExternalLibrary</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="FodyWeavers.xml" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config">
-      <SubType>Designer</SubType>
-    </None>
     <None Include="packages.config" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj">
+      <Project>{49195ad7-0954-4005-b4cb-970a80e87e09}</Project>
+      <Name>SexyProxy.Tests.ExternalLibrary</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\SexyProxy\SexyProxy.csproj">
+      <Project>{7e7c395b-e561-4667-b8a5-d26b2b6e0199}</Project>
+      <Name>SexyProxy</Name>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-  <PropertyGroup>
-    <PreBuildEvent>copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\SexyProxy.Fody.dll $(SolutionDir)Weavers\bin\Weavers.dll
-copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\SexyProxy.Fody.pdb $(SolutionDir)Weavers\bin\Weavers.pdb</PreBuildEvent>
-  </PropertyGroup>
-  <Import Project="..\packages\Fody.2.0.7\build\dotnet\Fody.targets" Condition="Exists('..\packages\Fody.2.0.7\build\dotnet\Fody.targets')" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
       <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
     </PropertyGroup>
-    <Error Condition="!Exists('..\packages\Fody.2.0.7\build\dotnet\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.2.0.7\build\dotnet\Fody.targets'))" />
+    <Error Condition="!Exists('..\packages\NUnit.3.10.1\build\NUnit.props')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\NUnit.3.10.1\build\NUnit.props'))" />
+    <Error Condition="!Exists('..\packages\Fody.3.2.0\build\Fody.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\Fody.3.2.0\build\Fody.targets'))" />
   </Target>
-  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
-       Other similar extension points exist, see Microsoft.Common.targets.
-  <Target Name="BeforeBuild">
-  </Target>
-  <Target Name="AfterBuild">
-  </Target>
-  -->
+  <Import Project="..\packages\Fody.3.2.0\build\Fody.targets" Condition="Exists('..\packages\Fody.3.2.0\build\Fody.targets')" />
+  <PropertyGroup>
+    <PreBuildEvent>copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\netstandard2.0\SexyProxy.Fody.dll $(SolutionDir)Weavers\bin\Weavers.dll
+copy $(SolutionDir)SexyProxy.Fody\bin\$(ConfigurationName)\netstandard2.0\SexyProxy.Fody.pdb $(SolutionDir)Weavers\bin\Weavers.pdb</PreBuildEvent>
+  </PropertyGroup>
 </Project>

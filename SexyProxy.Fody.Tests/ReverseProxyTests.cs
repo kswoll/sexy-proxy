@@ -83,7 +83,7 @@ namespace SexyProxy.Fody.Tests
         }
 
         [Test]
-        public async void AsyncClassWithInvocation()
+        public async Task AsyncClassWithInvocation()
         {
             var proxy = Proxy.CreateProxy<AsyncClass>(x => Task.FromResult<object>("foo"));
             var result = await proxy.AsyncMethod(0);
