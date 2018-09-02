@@ -11,6 +11,7 @@
     <description>Proxy library with support for async operations.</description>
     <copyright>Copyright 2015</copyright>
     <tags>sexy-proxy async proxy</tags>
+    <dependencies>
       <group targetFramework=".NETFramework4.6.1">
       </group>
       <group targetFramework="MonoAndroid8.0">
@@ -27,5 +28,6 @@
       </group>
       <group targetFramework="UAP10.0.16299">
       </group>
+    </dependencies>
   </metadata>
 </package>
