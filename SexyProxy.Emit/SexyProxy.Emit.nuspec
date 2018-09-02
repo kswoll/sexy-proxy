@@ -1,0 +1,31 @@
+<package>
+  <metadata>
+    <id>SexyProxy.Emit</id>
+    <version>2.0.0</version>
+    <authors>kirk</authors>
+    <owners>kirk</owners>
+    <projectUrl>https://github.com/kswoll/sexy-proxy</projectUrl>
+    <licenseUrl>http://www.opensource.org/licenses/mit-license.php</licenseUrl>
+	  <releaseNotes>Initial release.</releaseNotes>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Proxy library with support for async operations.</description>
+    <copyright>Copyright 2015</copyright>
+    <tags>sexy-proxy async proxy</tags>
+      <group targetFramework=".NETFramework4.6.1">
+      </group>
+      <group targetFramework="MonoAndroid8.0">
+      </group>
+      <group targetFramework="Xamarin.iOS1.0">
+      </group>
+      <group targetFramework="Xamarin.Mac2.0">
+      </group>
+      <group targetFramework="Xamarin.TVOS1.0">
+      </group>
+      <group targetFramework=".NETCoreApp2.0">
+      </group>
+      <group targetFramework=".NETStandard2.0">
+      </group>
+      <group targetFramework="UAP10.0.16299">
+      </group>
+  </metadata>
+</package>
