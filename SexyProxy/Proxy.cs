@@ -3,10 +3,7 @@ using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
-
-#if EMIT
 using SexyProxy.Emit;
-#endif
 
 namespace SexyProxy
 {
@@ -37,12 +34,7 @@ namespace SexyProxy
 
         static Proxy()
         {
-            if (File.Exists(Path.Combine(Path.GetDirectoryName(typeof(Proxy).Assembly.Location), "SexyProxy.Emit.dll")))
-            {
-                var emitAssembly = Assembly.Load("SexyProxy.Emit");
-                var emitProxyTypeFactoryType = emitAssembly.GetType("SexyProxy.Emit.EmitProxyTypeFactory");
-                EmitProxyTypeFactory = (IProxyTypeFactory)Activator.CreateInstance(emitProxyTypeFactoryType);
-            }
+            EmitProxyTypeFactory = new EmitProxyTypeFactory();
         }
 
         /// <summary>

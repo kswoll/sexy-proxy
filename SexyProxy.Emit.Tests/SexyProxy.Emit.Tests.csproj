@@ -63,10 +63,6 @@
     <Compile Include="ReadMeTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\SexyProxy.Emit\SexyProxy.Emit.csproj">
-      <Project>{5bc3a5c4-e3c9-4598-a271-328b64da4b21}</Project>
-      <Name>SexyProxy.Emit</Name>
-    </ProjectReference>
     <ProjectReference Include="..\SexyProxy\SexyProxy.csproj">
       <Project>{7e7c395b-e561-4667-b8a5-d26b2b6e0199}</Project>
       <Name>SexyProxy</Name>

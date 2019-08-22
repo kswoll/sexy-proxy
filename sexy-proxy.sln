@@ -1,19 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27703.2047
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28922.388
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SexyProxy", "SexyProxy\SexyProxy.csproj", "{7E7C395B-E561-4667-B8A5-D26B2B6E0199}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SexyProxy.Emit", "SexyProxy.Emit\SexyProxy.Emit.csproj", "{5BC3A5C4-E3C9-4598-A271-328B64DA4B21}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Emit.Tests", "SexyProxy.Emit.Tests\SexyProxy.Emit.Tests.csproj", "{63028D39-5AE0-42D1-9EF4-835EDAECE81B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Fody", "SexyProxy.Fody\SexyProxy.Fody.csproj", "{290ED747-515C-4AB4-A455-0A9A6FEEA7D7}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SexyProxy.Fody", "SexyProxy.Fody\SexyProxy.Fody.csproj", "{290ED747-515C-4AB4-A455-0A9A6FEEA7D7}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Fody.Tests", "SexyProxy.Fody.Tests\SexyProxy.Fody.Tests.csproj", "{F30557FD-80CB-4D97-BC3B-80766BDE947E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SexyProxy.Tests.ExternalLibrary", "SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj", "{49195AD7-0954-4005-B4CB-970A80E87E09}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SexyProxy.Tests.ExternalLibrary", "SexyProxy.Tests.ExternalLibrary\SexyProxy.Tests.ExternalLibrary.csproj", "{49195AD7-0954-4005-B4CB-970A80E87E09}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -25,10 +23,6 @@ Global
 		{7E7C395B-E561-4667-B8A5-D26B2B6E0199}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{7E7C395B-E561-4667-B8A5-D26B2B6E0199}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{7E7C395B-E561-4667-B8A5-D26B2B6E0199}.Release|Any CPU.Build.0 = Release|Any CPU
-		{5BC3A5C4-E3C9-4598-A271-328B64DA4B21}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{5BC3A5C4-E3C9-4598-A271-328B64DA4B21}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{5BC3A5C4-E3C9-4598-A271-328B64DA4B21}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{5BC3A5C4-E3C9-4598-A271-328B64DA4B21}.Release|Any CPU.Build.0 = Release|Any CPU
 		{63028D39-5AE0-42D1-9EF4-835EDAECE81B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{63028D39-5AE0-42D1-9EF4-835EDAECE81B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{63028D39-5AE0-42D1-9EF4-835EDAECE81B}.Release|Any CPU.ActiveCfg = Release|Any CPU
