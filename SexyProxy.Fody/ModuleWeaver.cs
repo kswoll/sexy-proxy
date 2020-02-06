@@ -9,7 +9,11 @@ namespace SexyProxy.Fody
     {
         public override IEnumerable<string> GetAssembliesForScanning()
         {
-            return new[] { "netstandard", "mscorlib" };
+            yield return "netstandard";
+            yield return "mscorlib";
+            yield return "System";
+            yield return "System.Runtime";
+            yield return "System.Core";
         }
 
         public override void Execute()
