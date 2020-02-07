@@ -11,6 +11,8 @@ namespace SexyProxy.Fody
 {
     public class SexyProxyWeaver
     {
+        public ModuleWeaver ModuleWeaver { get; set; }
+
         public ModuleDefinition ModuleDefinition { get; set; }
 
         // Will log an MessageImportance.High message to MSBuild. OPTIONAL
@@ -45,13 +47,15 @@ namespace SexyProxy.Fody
             var proxyFors = ModuleDefinition.Assembly.GetCustomAttributes(proxyForAttribute).Select(x => (TypeReference)x.ConstructorArguments.Single().Value).Select(x => x.Resolve()).ToArray();
             targetTypes = targetTypes.Concat(proxyFors).ToArray();
 
-            var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
-            var propertyInfoType = ModuleDefinition.Import(typeof(PropertyInfo));
+            var methodInfoType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(MethodInfo).FullName));
+            var propertyInfoType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(PropertyInfo).FullName));
 
-            var func2Type = ModuleDefinition.Import(typeof(Func<,>));
-            var action1Type = ModuleDefinition.Import(typeof(Action<>));
+            var func2Type = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Func<,>).FullName));
+            var action1Type = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Action<>).FullName));
+            // for some reason this does not work:
+            //var objectArrayType = ModuleDefinition.Import(ModuleDefinition.FindType(typeof(object[])));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
-            var taskType = ModuleDefinition.Import(typeof(Task));
+            var taskType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Task).FullName));
             var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
             var asyncInvocationTType = ModuleDefinition.FindType("SexyProxy", "AsyncInvocationT`1", sexyProxy, "T");
             var invocationHandlerType = ModuleDefinition.FindType("SexyProxy", "InvocationHandler", sexyProxy);
@@ -64,13 +68,13 @@ namespace SexyProxy.Fody
             var asyncVoidInvokeMethod = ModuleDefinition.FindMethod(invocationHandlerType, "VoidAsyncInvoke");
             var invokeTMethod = ModuleDefinition.FindMethod(invocationHandlerType, "InvokeT");
             var asyncInvokeTMethod = ModuleDefinition.FindMethod(invocationHandlerType, "AsyncInvokeT");
-            var objectType = ModuleDefinition.Import(typeof(object));
+            var objectType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(object).FullName));
             var proxyGetInvocationHandlerMethod = ModuleDefinition.FindGetter(proxyInterface, "InvocationHandler");
             var reverseProxyGetInvocationHandlerMethod = ModuleDefinition.FindGetter(reverseProxyInterface, "InvocationHandler");
             var invocationType = ModuleDefinition.FindType("SexyProxy", "Invocation", sexyProxy);
             var invocationGetArguments = ModuleDefinition.FindGetter(invocationType, "Arguments");
             var invocationGetProxy = ModuleDefinition.FindGetter(invocationType, "Proxy");
-            var asyncTaskMethodBuilder = ModuleDefinition.Import(typeof(AsyncTaskMethodBuilder<>));
+            var asyncTaskMethodBuilder = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(AsyncTaskMethodBuilder<>).FullName));
             var methodFinder = ModuleDefinition.FindType("SexyProxy.Reflection", "MethodFinder`1", sexyProxy, "T");
             var findMethod = ModuleDefinition.FindMethod(methodFinder, "FindMethod");
             var findProperty = ModuleDefinition.FindMethod(methodFinder, "FindProperty");
