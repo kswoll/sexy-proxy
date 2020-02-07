@@ -31,13 +31,15 @@ namespace SexyProxy.Fody
         private static TypeReference taskTType;
         private static MethodReference taskFromResult;
 
-        internal static void Initialize(ModuleDefinition moduleDefinition)
+        internal static void Initialize(ModuleWeaver weaver, ModuleDefinition moduleDefinition)
         {
+            Debugger.Launch();
             ModuleDefinition = moduleDefinition;
-            typeType = ModuleDefinition.Import(typeof(Type));
-            taskType = ModuleDefinition.Import(typeof(Task));
-            getTypeFromRuntimeHandleMethod = ModuleDefinition.Import(typeType.Resolve().Methods.Single(x => x.Name == "GetTypeFromHandle"));
-            typeGetMethod = ModuleDefinition.Import(typeType.Resolve().Methods.Single(x => x.Name == "GetMethod" && x.Parameters.Count == 5));
+            typeType = weaver.FindType(typeof(Type).FullName);
+            taskType = weaver.FindType(typeof(Task).FullName);
+            var typeTypeResolved = typeType.Resolve();
+            getTypeFromRuntimeHandleMethod = ModuleDefinition.Import(typeTypeResolved.Methods.Single(x => x.Name == "GetTypeFromHandle"));
+            typeGetMethod = ModuleDefinition.Import(typeTypeResolved.Methods.Single(x => x.Name == "GetMethod" && x.Parameters.Count == 5));
             taskTType = ModuleDefinition.Import(typeof(Task<>));
             taskFromResult = ModuleDefinition.Import(taskType.Resolve().Methods.Single(x => x.Name == "FromResult"));
         }

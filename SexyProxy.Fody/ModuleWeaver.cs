@@ -21,10 +21,11 @@ namespace SexyProxy.Fody
             CecilExtensions.LogError = LogError;
             CecilExtensions.LogInfo = LogInfo;
             CecilExtensions.LogWarning = LogWarning;
-            CecilExtensions.Initialize(ModuleDefinition);
+            CecilExtensions.Initialize(this, ModuleDefinition);
 
             var propertyWeaver = new SexyProxyWeaver
             {
+                Weaver = this,
                 ModuleDefinition = ModuleDefinition,
                 LogInfo = LogInfo,
                 LogWarning = LogWarning,

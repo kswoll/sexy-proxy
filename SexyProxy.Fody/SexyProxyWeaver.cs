@@ -11,6 +11,8 @@ namespace SexyProxy.Fody
 {
     public class SexyProxyWeaver
     {
+        public ModuleWeaver Weaver { get; set; }
+
         public ModuleDefinition ModuleDefinition { get; set; }
 
         // Will log an MessageImportance.High message to MSBuild. OPTIONAL
@@ -45,13 +47,15 @@ namespace SexyProxy.Fody
             var proxyFors = ModuleDefinition.Assembly.GetCustomAttributes(proxyForAttribute).Select(x => (TypeReference)x.ConstructorArguments.Single().Value).Select(x => x.Resolve()).ToArray();
             targetTypes = targetTypes.Concat(proxyFors).ToArray();
 
-            var methodInfoType = ModuleDefinition.Import(typeof(MethodInfo));
+            Debugger.Launch();
+
+            var methodInfoType = Weaver.FindType(typeof(MethodInfo).FullName);
             var propertyInfoType = ModuleDefinition.Import(typeof(PropertyInfo));
 
-            var func2Type = ModuleDefinition.Import(typeof(Func<,>));
+            var func2Type = Weaver.FindType(typeof(Func<,>).FullName);
             var action1Type = ModuleDefinition.Import(typeof(Action<>));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
-            var taskType = ModuleDefinition.Import(typeof(Task));
+            var taskType = Weaver.FindType(typeof(Task).FullName);
             var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
             var asyncInvocationTType = ModuleDefinition.FindType("SexyProxy", "AsyncInvocationT`1", sexyProxy, "T");
             var invocationHandlerType = ModuleDefinition.FindType("SexyProxy", "InvocationHandler", sexyProxy);
