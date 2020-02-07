@@ -53,7 +53,7 @@ namespace SexyProxy.Fody
             var func2Type = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Func<,>).FullName));
             var action1Type = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Action<>).FullName));
             // for some reason this does not work:
-            //var objectArrayType = ModuleDefinition.Import(ModuleDefinition.FindType(typeof(object[])));
+            // var objectArrayType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(object[]).FullName));
             var objectArrayType = ModuleDefinition.Import(typeof(object[]));
             var taskType = ModuleDefinition.Import(ModuleWeaver.FindType(typeof(Task).FullName));
             var invocationTType = ModuleDefinition.FindType("SexyProxy", "InvocationT`1", sexyProxy, "T");
