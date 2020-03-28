@@ -235,7 +235,7 @@ namespace SexyProxy.Emit
                     il.Emit(OpCodes.Ldsfld, propertyInfoField);                                 // Load the PropertyInfo onto the stack
                 il.Emit(OpCodes.Call, invocationHandlerIsHandlerActive);                        // Call InvocationHandler.IsHandlerActive and leave the bool result on the stack
                 il.Emit(OpCodes.Brtrue, notOptedOut);                                           // If they didn't opt out (returned true), jump to the normal interception logic below
-                ImplementOptOut(il, methodInfo, proceedCall, isIntf, target);                   // They opted out, so do an implicit (and efficient) equivalent of proceed
+                ImplementOptOut(il, methodInfo, proceedCall, target);                           // They opted out, so do an implicit (and efficient) equivalent of proceed
                 il.MarkLabel(notOptedOut);
 
                 // Load handler
@@ -294,7 +294,7 @@ namespace SexyProxy.Emit
             return proxyType;
         }
 
-        private void ImplementOptOut(ILGenerator il, MethodInfo methodInfo, OpCode proceedCall, bool isIntf, FieldBuilder target)
+        private void ImplementOptOut(ILGenerator il, MethodInfo methodInfo, OpCode proceedCall, FieldBuilder target)
         {
             var parameterInfos = methodInfo.GetParameters();
 
